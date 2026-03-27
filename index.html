@@ -598,7 +598,7 @@ footer { background: var(--brown-deep); padding: 40px 48px; display: flex; align
         <div class="arrow-beat"><span>↑</span><small>&</small></div>
       </div>
     </div>
-    <img class="hero-screenshot" src="AppScreenshots/sc_phone.png" alt="Strum app">
+    <img class="hero-screenshot" src="AppScreenshots/sc_phone.PNG" alt="Strum app">
     <div class="phone-float-card float-card-2">
       <div class="float-card-label">Tuner</div>
       <div class="float-card-value">E<sup style="font-size:10px;color:var(--brown-warm)">4</sup></div>
@@ -805,22 +805,21 @@ footer { background: var(--brown-deep); padding: 40px 48px; display: flex; align
       <div class="versions-list">
         <div class="version-row active" id="strumAiRow" onclick="toggleProgression()">
           <div class="version-info"><div class="version-name">Strum AI Version</div><div class="version-meta">Official · Capo 6th fret · Tap to hear</div></div>
-          <div class="version-chords"><span class="version-chord-tag">Am</span><span class="version-chord-tag">G</span><span class="version-chord-tag">F</span><span class="version-chord-tag">C</span></div>
+          <div class="version-chords"><span class="version-chord-tag">G#</span><span class="version-chord-tag">E</span><span class="version-chord-tag">F#</span></div>
         </div>
         <!-- Chord progression player -->
         <div class="progression-player" id="progressionPlayer">
           <div class="pp-label">Chord Progression — Layla (Intro)</div>
           <div class="pp-chords" id="ppChords">
-            <div class="pp-chord" data-chord="Am">Am</div>
-            <div class="pp-chord" data-chord="G">G</div>
-            <div class="pp-chord" data-chord="F">F</div>
-            <div class="pp-chord" data-chord="C">C</div>
+            <div class="pp-chord" data-chord="G#">G#</div>
+            <div class="pp-chord" data-chord="E">E</div>
+            <div class="pp-chord" data-chord="F#">F#</div>
           </div>
           <div class="pp-controls">
             <button class="pp-play-btn" id="ppPlayBtn" onclick="togglePlay()">
               <span id="ppPlayIcon">▶</span> <span id="ppPlayLabel">Play progression</span>
             </button>
-            <div class="pp-bpm">120 BPM · Capo 6</div>
+            <div class="pp-bpm">96 BPM · Capo 6</div>
           </div>
         </div>
         <div class="version-row" onclick="openVersionSheet('Beginner Friendly','jsclapton92 · No capo','Am, G, F — open chord version, great for beginners.')">
@@ -1370,7 +1369,7 @@ function startPlay() {
   document.getElementById('ppPlayLabel').textContent = 'Stop';
   document.getElementById('ppPlayBtn').disabled = false;
   const chords = Array.from(document.querySelectorAll('.pp-chord'));
-  const BPM = 120;
+  const BPM = 96;
   const beatMs = (60/BPM)*1000 * 2; // 2 beats per chord
   let i = 0;
   function step() {
