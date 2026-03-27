@@ -667,6 +667,11 @@ footer { background: var(--brown-deep); padding: 40px 48px; display: flex; align
             <div class="upload-card-title">Files</div>
             <div class="upload-card-desc">MP3, WAV, M4A, and other files recognized by Strum</div>
           </div>
+          <div class="upload-card featured" data-upload="spotify" onclick="handleUploadCard(this,'spotify')">
+            <span class="upload-card-icon" style="display:flex;align-items:center;justify-content:center;gap:10px;"><img src="https://upload.wikimedia.org/wikipedia/commons/7/71/Spotify.png" alt="Spotify" style="height:20px;width:auto;filter:brightness(0) invert(1);opacity:0.85;"><img src="https://1000logos.net/wp-content/uploads/2023/01/Apple-Music-Logo.png" alt="Apple Music" style="height:20px;width:auto;filter:brightness(0) invert(1);opacity:0.85;"></span>
+            <div class="upload-card-title">Spotify &amp; Apple Music</div>
+            <div class="upload-card-desc">Connect your streaming account — Strum personalizes chord charts around the music you already love</div>
+          </div>
           <!-- Desktop preview panel injected here -->
           <div class="upload-preview-panel" id="uploadPreviewPanel">
             <div class="panel-screenshot" id="panelPhoneScreen"></div>
@@ -731,12 +736,6 @@ footer { background: var(--brown-deep); padding: 40px 48px; display: flex; align
         <span class="feature-icon">◎</span>
         <div class="feature-title">Built-In Tuner</div>
         <div class="feature-desc">Chromatic tuner with real-time note detection. Multiple presets from Standard to Drop D — no app switching needed.</div>
-      </div>
-      <div class="feature-cell" data-feat="spotify" onclick="handleFeatureClick(this,'spotify')">
-        <span class="feature-icon" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><img src="https://upload.wikimedia.org/wikipedia/commons/7/71/Spotify.png" alt="Spotify" style="height:22px;width:auto;"><img src="https://1000logos.net/wp-content/uploads/2023/01/Apple-Music-Logo.png" alt="Apple Music" style="height:22px;width:auto;"></span>
-        <div class="feature-title">Spotify &amp; Apple Music</div>
-        <div class="feature-desc">Connect your streaming account — Strum personalizes your chord library around the music you already love.</div>
-        <span class="feature-tag">Personalized</span>
       </div>
       <!-- Feature preview row 3 (after row 3) -->
       <div class="feature-preview-row" id="fpr3"><div class="feature-preview-inner"><div class="fp-screenshot" id="fpScreen3"></div><div class="fp-text"><h4 id="fpTitle3"></h4><p id="fpDesc3"></p><div class="fp-close" onclick="closeFeaturePreview(3)">✕ Close</div></div></div></div>
@@ -992,6 +991,11 @@ const UPLOAD_DATA = {
     title: 'Files',
     desc: 'Upload MP3, WAV, or M4A files from your device. Works with anything in your music library, voice memos, or downloaded tracks.',
     screen: `<img src="AppScreenshots/sc_files.png" alt="Files" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">`
+  },
+  spotify: {
+    title: 'Spotify & Apple Music',
+    desc: 'Connect your streaming account — Strum surfaces chord charts for the songs you already love, personalized to your listening habits.',
+    screen: `<img src="AppScreenshots/sc_music.png" alt="Spotify & Apple Music" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">`
   }
 };
 
@@ -1003,7 +1007,6 @@ const FEATURE_DATA = {
   community: { title:'Community Versions', desc:'Browse chord arrangements from real players — different capo positions, different chord voicings, different approaches to the same song.', screen:`<img src="AppScreenshots/sc_community.png" alt="Community Versions" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
   library:   { title:'1M+ Song Library', desc:'Search from over a million songs with pre-built chord charts — browse by artist, genre, or trending charts. Every genre covered.', screen:`<img src="AppScreenshots/sc_search.png" alt="Song Library" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
   tuner:     { title:'Built-In Tuner', desc:'A chromatic tuner built into the app — no switching needed. Real-time pitch detection, string selector, and multiple tuning presets.', screen:`<img src="AppScreenshots/sc_tuner.png" alt="Tuner" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
-  spotify:   { title:'Spotify & Apple Music', desc:'Connect your streaming account so Strum knows what you already listen to and surfaces chord charts for your top songs first.', screen:`<img src="AppScreenshots/sc_music.png" alt="Spotify & Apple Music" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` }
 };
 
 const CHORD_DATA = {
