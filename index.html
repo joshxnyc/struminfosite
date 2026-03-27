@@ -1010,62 +1010,61 @@ const CHORD_DATA = {
   // Open chord shapes (has open:[]) are always valid regardless of capo position
   // Barre chords (no open strings) only valid when startFret > capoFret
   'C': { variations: [
-    { fingers:[[3,2],[2,3],[1,5]], open:[4,6], muted:[1], desc:'Open C major (x32010)', freq:[130.81,196.00,261.63,329.63] },
-    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:3, desc:'Barre C major (3rd fret)', freq:[130.81,196.00,261.63,329.63] },
-    { fingers:[[3,2],[3,5]], open:[4,6], muted:[1], desc:'Csus2 open voicing', freq:[130.81,196.00,261.63,329.63] }
+    { fingers:[[3,2],[2,3],[1,5]], open:[4,6], muted:[1], desc:'Open C major (x32010)', freq:[130.81,164.81,196.00,261.63,329.63] },
+    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:3, desc:'Barre C major (3rd fret)', freq:[130.81,196.00,261.63,329.63,392.00] },
+    { fingers:[[3,2],[3,5]], open:[4,6], muted:[1], desc:'Csus2 open voicing', freq:[130.81,196.00,293.66,329.63] }
   ] },
   'G': { variations: [
-    { fingers:[[3,1],[2,2],[3,6]], open:[3,4,5], muted:[], desc:'Open G major (320003)', freq:[98.00,146.83,196.00,246.94] },
-    { fingers:[[3,1],[2,2],[3,5],[3,6]], open:[3,4], muted:[], desc:'Open G alt voicing (320033)', freq:[98.00,146.83,196.00,246.94] },
-    { fingers:[[1,1],[3,2],[3,3],[2,4],[1,5],[1,6]], open:[], muted:[], startFret:3, desc:'Barre G major (3rd fret)', freq:[98.00,146.83,196.00,246.94] }
+    { fingers:[[3,1],[2,2],[3,6]], open:[3,4,5], muted:[], desc:'Open G major (320003)', freq:[98.00,123.47,146.83,196.00,246.94,392.00] },
+    { fingers:[[3,1],[2,2],[3,5],[3,6]], open:[3,4], muted:[], desc:'Open G alt voicing (320033)', freq:[98.00,123.47,146.83,196.00,293.66,392.00] },
+    { fingers:[[1,1],[3,2],[3,3],[2,4],[1,5],[1,6]], open:[], muted:[], startFret:3, desc:'Barre G major (3rd fret)', freq:[98.00,146.83,196.00,246.94,293.66,392.00] }
   ] },
   'Am': { variations: [
-    { fingers:[[2,3],[2,4],[1,5]], open:[2,6], muted:[1], desc:'Open A minor (x02210)', freq:[110.00,164.81,220.00,261.63] },
-    { fingers:[[1,1],[3,2],[3,3],[1,4],[1,5],[1,6]], open:[], muted:[], startFret:5, desc:'Barre A minor (5th fret)', freq:[110.00,164.81,220.00,261.63] },
-    { fingers:[[2,3],[1,5]], open:[2,4,6], muted:[1], desc:'Am7 open voicing (x02010)', freq:[110.00,164.81,220.00,261.63] }
+    { fingers:[[2,3],[2,4],[1,5]], open:[2,6], muted:[1], desc:'Open A minor (x02210)', freq:[110.00,164.81,220.00,261.63,329.63] },
+    { fingers:[[1,1],[3,2],[3,3],[1,4],[1,5],[1,6]], open:[], muted:[], startFret:5, desc:'Barre A minor (5th fret)', freq:[110.00,164.81,220.00,261.63,329.63,440.00] },
+    { fingers:[[2,3],[1,5]], open:[2,4,6], muted:[1], desc:'Am7 open voicing (x02010)', freq:[110.00,164.81,196.00,261.63,329.63] }
   ] },
   'F': { variations: [
-    { fingers:[[1,1],[3,2],[3,3],[2,4],[1,5],[1,6]], open:[], muted:[], desc:'Barre F major (1st fret)', freq:[87.31,130.81,174.61,220.00] },
-    { fingers:[[3,3],[2,4],[1,5],[1,6]], open:[], muted:[1,2], desc:'F major partial barre (xx3211)', freq:[87.31,130.81,174.61,220.00] },
-    { fingers:[[3,2],[3,3],[2,4],[1,5]], open:[6], muted:[1], desc:'Fmaj7 open voicing (x33210)', freq:[87.31,130.81,174.61,220.00] }
+    { fingers:[[1,1],[3,2],[3,3],[2,4],[1,5],[1,6]], open:[], muted:[], desc:'Barre F major (1st fret)', freq:[87.31,130.81,174.61,220.00,261.63,349.23] },
+    { fingers:[[3,3],[2,4],[1,5],[1,6]], open:[], muted:[1,2], desc:'F major partial barre (xx3211)', freq:[174.61,220.00,261.63,349.23] },
+    { fingers:[[3,2],[3,3],[2,4],[1,5]], open:[6], muted:[1], desc:'Fmaj7 open voicing (x33210)', freq:[130.81,174.61,220.00,261.63,329.63] }
   ] },
   'D': { variations: [
     { fingers:[[2,4],[3,5],[2,6]], open:[3], muted:[1,2], desc:'Open D major (xx0232)', freq:[146.83,220.00,293.66,369.99] },
-    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:5, desc:'Barre D major (5th fret)', freq:[146.83,220.00,293.66,369.99] },
-    { fingers:[[2,4],[3,5]], open:[3,6], muted:[1,2], desc:'Dsus2 open voicing (xx0230)', freq:[146.83,220.00,293.66,369.99] }
+    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:5, desc:'Barre D major (5th fret)', freq:[146.83,220.00,293.66,369.99,440.00] },
+    { fingers:[[2,4],[3,5]], open:[3,6], muted:[1,2], desc:'Dsus2 open voicing (xx0230)', freq:[146.83,220.00,293.66,329.63] }
   ] },
   'E': { variations: [
-    { fingers:[[2,2],[2,3],[1,4]], open:[1,5,6], muted:[], desc:'Open E major (022100)', freq:[82.41,123.47,164.81,207.65] },
-    { fingers:[[2,2],[1,4]], open:[1,3,5,6], muted:[], desc:'E7 open voicing (020100)', freq:[82.41,123.47,164.81,207.65] },
-    { fingers:[[2,2],[4,3],[1,4]], open:[1,5,6], muted:[], desc:'Esus4 open voicing (022200)', freq:[82.41,123.47,164.81,207.65] }
+    { fingers:[[2,2],[2,3],[1,4]], open:[1,5,6], muted:[], desc:'Open E major (022100)', freq:[82.41,123.47,164.81,207.65,246.94,329.63] },
+    { fingers:[[2,2],[1,4]], open:[1,3,5,6], muted:[], desc:'E7 open voicing (020100)', freq:[82.41,123.47,146.83,207.65,246.94,329.63] },
+    { fingers:[[2,2],[4,3],[1,4]], open:[1,5,6], muted:[], desc:'Esus4 open voicing (022200)', freq:[82.41,123.47,164.81,220.00,246.94,329.63] }
   ] },
   'A': { variations: [
-    { fingers:[[2,3],[2,4],[2,5]], open:[2,6], muted:[1], desc:'Open A major (x02220)', freq:[110.00,164.81,220.00,277.18] },
-    { fingers:[[1,1],[3,2],[3,3],[2,4],[1,5],[1,6]], open:[], muted:[], startFret:5, desc:'Barre A major (5th fret)', freq:[110.00,164.81,220.00,277.18] },
-    { fingers:[[2,3],[2,5]], open:[2,4,6], muted:[1], desc:'A7 open voicing (x02020)', freq:[110.00,164.81,220.00,277.18] }
+    { fingers:[[2,3],[2,4],[2,5]], open:[2,6], muted:[1], desc:'Open A major (x02220)', freq:[110.00,164.81,220.00,277.18,329.63] },
+    { fingers:[[1,1],[3,2],[3,3],[2,4],[1,5],[1,6]], open:[], muted:[], startFret:5, desc:'Barre A major (5th fret)', freq:[110.00,164.81,220.00,277.18,329.63,440.00] },
+    { fingers:[[2,3],[2,5]], open:[2,4,6], muted:[1], desc:'A7 open voicing (x02020)', freq:[110.00,164.81,196.00,277.18,329.63] }
   ] },
   'B': { variations: [
-    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:2, desc:'Barre B major (2nd fret)', freq:[123.47,185.00,246.94,311.13] },
-    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:4, desc:'Barre B major (4th fret)', freq:[123.47,185.00,246.94,311.13] },
-    { fingers:[[2,2],[1,3],[2,4],[2,6]], open:[5], muted:[1], desc:'B7 open voicing (x21202)', freq:[123.47,185.00,246.94,311.13] }
+    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:2, desc:'Barre B major (2nd fret)', freq:[123.47,185.00,246.94,311.13,369.99] },
+    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:4, desc:'Barre B major (4th fret) — alt voicing', freq:[138.59,207.65,277.18,349.23,415.30] },
+    { fingers:[[2,2],[1,3],[2,4],[2,6]], open:[5], muted:[1], desc:'B7 open voicing (x21202)', freq:[123.47,155.56,220.00,246.94,369.99] }
   ] },
   'Em': { variations: [
-    { fingers:[[2,2],[2,3]], open:[1,4,5,6], muted:[], desc:'Open E minor (022000)', freq:[82.41,123.47,164.81,196.00] },
-    { fingers:[[2,2],[2,3],[3,5]], open:[1,4,6], muted:[], desc:'Em7 open voicing (022030)', freq:[82.41,123.47,164.81,196.00] },
-    { fingers:[[2,2],[2,3],[4,4]], open:[1,5,6], muted:[], desc:'Emadd9 open voicing', freq:[82.41,123.47,164.81,196.00] }
+    { fingers:[[2,2],[2,3]], open:[1,4,5,6], muted:[], desc:'Open E minor (022000)', freq:[82.41,123.47,164.81,196.00,246.94,329.63] },
+    { fingers:[[2,2],[2,3],[3,5]], open:[1,4,6], muted:[], desc:'Em7 open voicing (022030)', freq:[82.41,123.47,164.81,196.00,293.66,329.63] },
+    { fingers:[[2,2],[2,3],[4,4]], open:[1,5,6], muted:[], desc:'Emadd9 open voicing', freq:[82.41,123.47,164.81,246.94,329.63] }
   ] },
   'Dm': { variations: [
-    { fingers:[[2,4],[3,5],[1,6]], open:[3], muted:[1,2], desc:'Open D minor (xx0231)', freq:[146.83,196.00,220.00,293.66] },
-    { fingers:[[1,2],[3,3],[3,4],[2,5],[1,6]], open:[], muted:[1], startFret:5, desc:'Barre D minor (5th fret)', freq:[146.83,196.00,220.00,293.66] },
-    { fingers:[[2,4],[1,5],[1,6]], open:[3], muted:[1,2], desc:'Dm7 open voicing (xx0211)', freq:[146.83,196.00,220.00,293.66] }
+    { fingers:[[2,4],[3,5],[1,6]], open:[3], muted:[1,2], desc:'Open D minor (xx0231)', freq:[146.83,220.00,293.66,349.23] },
+    { fingers:[[1,2],[3,3],[3,4],[2,5],[1,6]], open:[], muted:[1], startFret:5, desc:'Barre D minor (5th fret)', freq:[146.83,220.00,293.66,349.23,440.00] },
+    { fingers:[[2,4],[1,5],[1,6]], open:[3], muted:[1,2], desc:'Dm7 open voicing (xx0211)', freq:[146.83,220.00,261.63,349.23] }
   ] }
 };
 
 const PP_FREQS = {
-  'Am': [110.00,164.81,220.00,261.63],
-  'G':  [98.00,146.83,196.00,246.94],
-  'F':  [87.31,130.81,174.61,220.00],
-  'C':  [130.81,196.00,261.63,329.63]
+  'G#': [103.83,155.56,207.65,261.63,311.13,415.30],
+  'E':  [82.41,123.47,164.81,207.65,246.94,329.63],
+  'F#': [92.50,138.59,185.00,233.08,277.18,369.99]
 };
 
 // ─── STATE ──────────────────────────────────────────────
