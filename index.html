@@ -237,6 +237,13 @@ section { padding: 100px 48px; }
 .feature-cell.dark .feature-desc { color: rgba(234,228,216,0.56); }
 .feature-cell.dark .feature-icon { color: var(--gold); }
 .feature-cell.wide { grid-column: span 2; }
+.feature-cell.coming-soon { cursor: default; background: var(--linen-light); border: 1.5px dashed rgba(196,154,74,0.25); }
+.feature-cell.coming-soon::after { display: none; }
+.feature-cell.coming-soon:hover { background: var(--linen-light); transform: none; }
+.feature-cell.coming-soon .feature-icon { opacity: 0.4; }
+.feature-cell.coming-soon .feature-title { color: var(--brown-deep); opacity: 0.5; }
+.feature-cell.coming-soon .feature-desc { opacity: 0.4; }
+.cs-badge { display: inline-block; margin-top: 12px; font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); padding: 4px 10px; border: 1px solid rgba(196,154,74,0.4); border-radius: 100px; background: rgba(196,154,74,0.06); }
 .feature-icon { font-size: 21px; margin-bottom: 16px; display: block; color: var(--gold); }
 .feature-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--brown-deep); margin-bottom: 8px; line-height: 1.2; }
 .feature-desc { font-size: 13px; line-height: 1.7; color: var(--brown-mid); font-weight: 300; }
@@ -736,6 +743,12 @@ footer { background: var(--brown-deep); padding: 40px 48px; display: flex; align
         <span class="feature-icon">◎</span>
         <div class="feature-title">Built-In Tuner</div>
         <div class="feature-desc">Chromatic tuner with real-time note detection. Multiple presets from Standard to Drop D — no app switching needed.</div>
+      </div>
+      <div class="feature-cell coming-soon">
+        <span class="feature-icon">✦</span>
+        <div class="feature-title">Something Big Is Coming</div>
+        <div class="feature-desc">We're building a major new feature that'll change the way you learn songs. More details soon.</div>
+        <span class="cs-badge">Coming Soon</span>
       </div>
       <!-- Feature preview row 3 (after row 3) -->
       <div class="feature-preview-row" id="fpr3"><div class="feature-preview-inner"><div class="fp-screenshot" id="fpScreen3"></div><div class="fp-text"><h4 id="fpTitle3"></h4><p id="fpDesc3"></p><div class="fp-close" onclick="closeFeaturePreview(3)">✕ Close</div></div></div></div>
