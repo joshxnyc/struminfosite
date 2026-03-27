@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Strum — Play Every Song You Love</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&family=Syne:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    color-scheme: light only;
+    --linen: #EAE4D8;
+    --linen-light: #F4F0E8;
+    --brown-deep: #2C1F0E;
+    --brown-mid: #5C3D1E;
+    --brown-warm: #8B6030;
+    --gold: #C49A4A;
+    --gold-light: #D4AE6A;
+    --cream-card: #F2EBD9;
+    --cream-warm: #EDE3CC;
+    --white: #FDFAF4;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--linen) !important;
+    color: var(--brown-deep) !important;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (hover: hover) and (pointer: fine) { body { cursor: none; } }
+
+  /* GRAIN */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 1000; opacity: 0.35;
+  }
+
+  /* CURSOR */
+  .cursor {
+    position: fixed; width: 8px; height: 8px;
+    background: var(--brown-deep); border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%,-50%);
+    will-change: left, top;
+    transition: transform 0.12s ease;
+    display: none;
+  }
+  .cursor-ring {
+    position: fixed; width: 30px; height: 30px;
+    border: 1px solid var(--brown-warm); border-radius: 50%;
+    pointer-events: none; z-index: 9998;
+    transform: translate(-50%,-50%); opacity: 0.5;
+    will-change: left, top;
+    transition: opacity 0.2s;
+    display: none;
+  }
+  .cursor.hover { transform: translate(-50%,-50%) scale(2.5); }
+  .cursor-ring.hover { opacity: 0.15; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    padding: 18px 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.4s, box-shadow 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(234,228,216,0.93) !important;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 1px 0 rgba(92,61,30,0.1);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+  .nav-logo-icon { width: 36px; height: 36px; flex-shrink: 0; }
+  .nav-logo-text { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 500; color: var(--brown-deep); letter-spacing: 0.02em; }
+  .nav-links { display: flex; gap: 36px; list-style: none; align-items: center; }
+  .nav-links a { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brown-warm); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--brown-deep); }
+  .nav-cta { background: var(--brown-deep) !important; color: var(--linen-light) !important; padding: 10px 22px !important; border-radius: 100px !important; transition: background 0.2s, transform 0.2s !important; }
+  .nav-cta:hover { background: var(--brown-mid) !important; transform: translateY(-1px) !important; }
+  .nav-hamburger { display: none; flex-direction: column; gap: 5px; padding: 4px; cursor: pointer; }
+  .nav-hamburger span { display: block; width: 22px; height: 1.5px; background: var(--brown-deep); border-radius: 2px; }
+
+  /* MOBILE MENU */
+  .mobile-menu {
+    display: none; position: fixed; inset: 0;
+    background: rgba(234,228,216,0.98); z-index: 190;
+    flex-direction: column; align-items: center; justify-content: center; gap: 32px;
+    backdrop-filter: blur(20px);
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 300; color: var(--brown-deep); text-decoration: none; }
+  .mobile-menu-close { position: absolute; top: 24px; right: 28px; font-size: 28px; color: var(--brown-warm); cursor: pointer; font-weight: 300; }
+  .mobile-dl-btn { font-family: 'Syne', sans-serif !important; font-size: 13px !important; background: var(--brown-deep); color: var(--linen) !important; padding: 14px 32px !important; border-radius: 100px; letter-spacing: 0.08em; }
+
+  /* HERO */
+  .hero {
+    min-height: 100svh;
+    display: grid; grid-template-columns: 1fr 1fr;
+    align-items: center; padding: 100px 48px 80px; gap: 60px;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg-strings { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .string-line {
+    position: absolute; top: 0; bottom: 0; width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(92,61,30,0.07) 20%, rgba(92,61,30,0.1) 50%, rgba(92,61,30,0.07) 80%, transparent);
+    animation: string-vibrate 6s ease-in-out infinite;
+  }
+  .string-line:nth-child(1){left:8%;animation-delay:0s}
+  .string-line:nth-child(2){left:14%;animation-delay:0.8s}
+  .string-line:nth-child(3){left:20%;animation-delay:1.6s}
+  .string-line:nth-child(4){left:26%;animation-delay:2.4s}
+  .string-line:nth-child(5){left:32%;animation-delay:3.2s}
+  .string-line:nth-child(6){left:38%;animation-delay:4s}
+  @keyframes string-vibrate {
+    0%,100%{transform:scaleX(1);opacity:0.6}
+    25%{transform:scaleX(2) translateX(2px);opacity:1}
+    75%{transform:scaleX(2) translateX(-2px);opacity:1}
+  }
+  .hero-text { position: relative; z-index: 2; }
+  .hero-eyebrow {
+    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+    opacity: 0; animation: fade-up 0.8s ease forwards 0.2s;
+  }
+  .hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
+  .hero-h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(48px, 5.5vw, 86px);
+    font-weight: 300; line-height: 1.0; color: var(--brown-deep);
+    letter-spacing: -0.02em; margin-bottom: 28px;
+    opacity: 0; animation: fade-up 0.9s ease forwards 0.4s;
+  }
+  .hero-h1 em { font-style: italic; color: var(--brown-warm); }
+  .hero-sub {
+    font-size: 16px; font-weight: 300; color: var(--brown-mid); line-height: 1.75;
+    max-width: 420px; margin-bottom: 44px;
+    opacity: 0; animation: fade-up 0.9s ease forwards 0.6s;
+  }
+  .hero-actions {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    opacity: 0; animation: fade-up 0.9s ease forwards 0.8s;
+  }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--brown-deep); color: var(--linen-light);
+    padding: 15px 30px; border-radius: 100px;
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.08em;
+    text-decoration: none; white-space: nowrap;
+    transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
+    box-shadow: 0 4px 24px rgba(44,31,14,0.2);
+  }
+  .btn-primary:hover { background: var(--brown-mid); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(44,31,14,0.3); }
+  .btn-ghost {
+    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--brown-warm);
+    text-decoration: none; display: flex; align-items: center; gap: 8px;
+    transition: color 0.2s, gap 0.2s; white-space: nowrap;
+  }
+  .btn-ghost:hover { color: var(--brown-deep); gap: 12px; }
+
+  /* HERO VISUAL */
+  .hero-visual {
+    position: relative; z-index: 2;
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; animation: fade-in 1.2s ease forwards 0.7s;
+  }
+  .phone-mockup {
+    width: 248px; background: var(--white); border-radius: 38px;
+    box-shadow: 0 0 0 1px rgba(44,31,14,0.07), 0 24px 72px rgba(44,31,14,0.15), 0 8px 28px rgba(44,31,14,0.08);
+    overflow: hidden; transform: rotate(2.5deg); position: relative; z-index: 2;
+    transition: transform 0.4s ease;
+  }
+  .phone-mockup:hover { transform: rotate(0deg) scale(1.02); }
+  .phone-notch { height: 25px; background: var(--brown-deep); display: flex; align-items: center; justify-content: center; }
+  .phone-notch-pill { width: 68px; height: 9px; background: #1a1000; border-radius: 10px; }
+  .phone-screen { padding: 13px 11px; background: #F0EDE6; min-height: 450px; }
+  .phone-song-title { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 500; color: var(--brown-deep); margin-bottom: 2px; }
+  .phone-artist { font-size: 10px; color: var(--brown-warm); margin-bottom: 11px; font-family: 'Syne', sans-serif; letter-spacing: 0.05em; }
+  .phone-pills { display: flex; gap: 5px; margin-bottom: 11px; }
+  .phone-pill { font-size: 8px; padding: 3px 8px; border-radius: 100px; font-family: 'Syne', sans-serif; font-weight: 500; }
+  .phone-pill.outline { border: 1px solid var(--brown-warm); color: var(--brown-warm); }
+  .phone-pill.filled { background: var(--cream-warm); color: var(--brown-mid); }
+  .chord-diagram-row { background: var(--cream-card); border-radius: 10px; padding: 8px 6px; display: flex; gap: 5px; margin-bottom: 11px; }
+  .mini-chord { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .mini-chord-name { font-size: 8px; font-family: 'Syne', sans-serif; font-weight: 500; color: var(--brown-deep); }
+  .mini-fretboard { width: 25px; height: 30px; border: 1px solid rgba(44,31,14,0.2); border-radius: 2px; position: relative; display: grid; grid-template-columns: repeat(4,1fr); grid-template-rows: repeat(4,1fr); }
+  .mini-fretboard::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--brown-deep); border-radius: 1px; }
+  .fret-line { border-right: 1px solid rgba(44,31,14,0.1); border-bottom: 1px solid rgba(44,31,14,0.1); }
+  .fret-dot { position: absolute; width: 7px; height: 7px; background: var(--brown-deep); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--linen); font-size: 5px; font-weight: 600; }
+  .chord-chips-row { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 5px; }
+  .chord-chip { background: rgba(44,31,14,0.07); border-radius: 5px; padding: 3px 7px; font-size: 8px; font-family: 'Syne', sans-serif; font-weight: 500; color: var(--brown-mid); }
+  .chord-chip.active { background: var(--brown-deep); color: var(--linen); }
+  .lyrics-block { margin-top: 7px; }
+  .lyric-line { font-size: 9px; color: rgba(44,31,14,0.36); line-height: 2.1; font-style: italic; }
+  .lyric-chord-marker { display: inline-block; background: var(--brown-deep); color: var(--linen); border-radius: 3px; padding: 1px 4px; font-size: 7px; font-family: 'Syne', sans-serif; margin-right: 2px; vertical-align: middle; }
+
+  .phone-float-card { position: absolute; background: var(--white); border-radius: 13px; padding: 12px 13px; box-shadow: 0 8px 32px rgba(44,31,14,0.12); z-index: 3; }
+  .float-card-1 { top: 48px; right: -26px; width: 132px; transform: rotate(-3deg); }
+  .float-card-2 { bottom: 64px; left: -36px; width: 136px; transform: rotate(2deg); }
+  .float-card-label { font-family: 'Syne', sans-serif; font-size: 8px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
+  .float-card-value { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: var(--brown-deep); }
+  .float-card-sub { font-size: 9px; color: var(--brown-warm); margin-top: 2px; }
+  .strum-arrows { display: flex; gap: 3px; margin-top: 6px; align-items: center; }
+  .arrow-beat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .arrow-beat span { font-size: 9px; color: var(--brown-deep); font-weight: 600; }
+  .arrow-beat small { font-size: 7px; color: var(--brown-warm); }
+
+  @keyframes fade-up { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fade-in { from{opacity:0} to{opacity:1} }
+
+  /* STATS */
+  .stats-bar {
+    border-top: 1px solid rgba(92,61,30,0.12);
+    border-bottom: 1px solid rgba(92,61,30,0.12);
+    padding: 24px 48px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.28); flex-wrap: wrap; gap: 12px;
+  }
+  .stat-item { flex: 1; min-width: 100px; text-align: center; position: relative; padding: 8px 16px; }
+  .stat-item::after { content: ''; position: absolute; right: 0; top: 15%; bottom: 15%; width: 1px; background: rgba(92,61,30,0.12); }
+  .stat-item:last-child::after { display: none; }
+  .stat-num { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 300; color: var(--brown-deep); line-height: 1; letter-spacing: -0.02em; }
+  .stat-num sup { font-size: 18px; vertical-align: super; }
+  .stat-label { font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brown-warm); margin-top: 4px; }
+
+  /* SECTION BASE */
+  section { padding: 100px 48px; }
+  .section-eyebrow { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .section-eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--gold); }
+  .section-h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(36px,4vw,64px); font-weight: 300; line-height: 1.05; letter-spacing: -0.02em; color: var(--brown-deep); margin-bottom: 20px; }
+  .section-h2 em { font-style: italic; color: var(--brown-warm); }
+
+  /* HOW */
+  .how-section { background: var(--white); }
+  .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; max-width: 1200px; margin: 0 auto; }
+  .how-step { display: flex; gap: 20px; padding: 26px 0; border-bottom: 1px solid rgba(92,61,30,0.1); transition: all 0.3s; }
+  .how-step:first-child { padding-top: 0; }
+  .how-step:last-child { border-bottom: none; }
+  .how-step:hover .step-num { background: var(--brown-deep); color: var(--linen); }
+  .step-num { width: 40px; height: 40px; border: 1px solid rgba(92,61,30,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 400; color: var(--brown-warm); flex-shrink: 0; transition: all 0.3s; }
+  .step-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--brown-deep); margin-bottom: 6px; }
+  .step-desc { font-size: 13px; line-height: 1.7; color: var(--brown-mid); font-weight: 300; }
+  .how-visual { display: flex; align-items: center; justify-content: center; }
+  .upload-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 340px; }
+  .upload-card { background: var(--linen-light); border: 1px solid rgba(92,61,30,0.1); border-radius: 17px; padding: 20px 16px; text-align: center; transition: all 0.3s; }
+  .upload-card:hover { background: var(--white); border-color: rgba(92,61,30,0.2); transform: translateY(-4px); box-shadow: 0 10px 32px rgba(44,31,14,0.08); }
+  .upload-card-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+  .upload-card-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; color: var(--brown-deep); margin-bottom: 3px; }
+  .upload-card-desc { font-size: 10px; color: var(--brown-warm); line-height: 1.5; }
+  .upload-card.featured { background: var(--brown-deep); border-color: transparent; grid-column: span 2; }
+  .upload-card.featured .upload-card-title { color: var(--linen); }
+  .upload-card.featured .upload-card-desc { color: rgba(234,228,216,0.5); }
+
+  /* FEATURES */
+  .features-section { background: var(--linen); }
+  .features-intro { max-width: 540px; margin-bottom: 64px; }
+  .features-intro p { font-size: 15px; line-height: 1.8; color: var(--brown-mid); font-weight: 300; }
+  .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; background: rgba(92,61,30,0.1); border: 1px solid rgba(92,61,30,0.1); border-radius: 22px; overflow: hidden; }
+  .feature-cell { background: var(--linen-light); padding: 38px 30px; transition: background 0.3s; position: relative; overflow: hidden; }
+  .feature-cell::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--gold); transform: scaleX(0); transform-origin: left; transition: transform 0.35s ease; }
+  .feature-cell:hover { background: var(--white); }
+  .feature-cell:hover::after { transform: scaleX(1); }
+  .feature-cell.dark { background: var(--brown-deep); }
+  .feature-cell.dark:hover { background: var(--brown-mid); }
+  .feature-cell.dark .feature-title { color: var(--linen); }
+  .feature-cell.dark .feature-desc { color: rgba(234,228,216,0.56); }
+  .feature-cell.dark .feature-icon { color: var(--gold); }
+  .feature-cell.wide { grid-column: span 2; }
+  .feature-icon { font-size: 21px; margin-bottom: 16px; display: block; color: var(--gold); }
+  .feature-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--brown-deep); margin-bottom: 8px; line-height: 1.2; }
+  .feature-desc { font-size: 13px; line-height: 1.7; color: var(--brown-mid); font-weight: 300; }
+  .feature-tag { display: inline-block; margin-top: 12px; font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); padding: 4px 10px; border: 1px solid rgba(196,154,74,0.3); border-radius: 100px; }
+
+  /* EDIT */
+  .edit-section { background: var(--brown-deep); position: relative; overflow: hidden; }
+  .edit-section::before { content: ''; position: absolute; top: -200px; right: -200px; width: 560px; height: 560px; border-radius: 50%; background: rgba(139,96,48,0.07); pointer-events: none; }
+  .edit-section .section-eyebrow { color: var(--gold-light); }
+  .edit-section .section-eyebrow::before { background: var(--gold-light); }
+  .edit-section .section-h2 { color: var(--linen); }
+  .edit-section .section-h2 em { color: var(--gold); }
+  .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; max-width: 1200px; margin: 0 auto; }
+  .edit-text p { font-size: 15px; line-height: 1.8; color: rgba(234,228,216,0.6); font-weight: 300; margin-bottom: 32px; }
+  .edit-features { display: flex; flex-direction: column; }
+  .edit-feature-row { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid rgba(234,228,216,0.07); }
+  .edit-feature-row:last-child { border-bottom: none; }
+  .edit-feature-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); margin-top: 8px; flex-shrink: 0; }
+  .edit-feature-title { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 500; color: var(--linen); margin-bottom: 3px; }
+  .edit-feature-desc { font-size: 12px; color: rgba(234,228,216,0.45); line-height: 1.6; font-weight: 300; }
+  .edit-modal { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 22px; backdrop-filter: blur(20px); }
+  .edit-modal-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: var(--linen); margin-bottom: 16px; text-align: center; }
+  .chord-picker-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin-bottom: 16px; }
+  .chord-pick { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 5px; text-align: center; transition: background 0.2s; }
+  .chord-pick:hover { background: rgba(255,255,255,0.1); }
+  .chord-pick.selected { background: var(--gold); border-color: var(--gold); }
+  .chord-pick-name { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; color: rgba(234,228,216,0.72); }
+  .chord-pick.selected .chord-pick-name { color: var(--brown-deep); }
+  .mini-fretboard-dark { width: 24px; height: 24px; border: 1px solid rgba(234,228,216,0.16); border-radius: 2px; margin: 5px auto 0; position: relative; }
+  .mini-fretboard-dark::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(234,228,216,0.22); }
+  .chord-pick.selected .mini-fretboard-dark { border-color: rgba(44,31,14,0.25); }
+  .chord-pick.selected .mini-fretboard-dark::before { background: rgba(44,31,14,0.32); }
+  .edit-modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .modal-btn { padding: 11px; border-radius: 10px; font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-align: center; }
+  .modal-btn.secondary { background: rgba(255,255,255,0.05); color: rgba(234,228,216,0.6); border: 1px solid rgba(255,255,255,0.08); }
+  .modal-btn.primary-btn { background: var(--gold); color: var(--brown-deep); }
+  .capo-card { margin-top: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 13px; padding: 16px; }
+  .capo-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; }
+  .capo-label { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; color: rgba(234,228,216,0.6); letter-spacing: 0.08em; text-transform: uppercase; }
+  .capo-controls { display: flex; align-items: center; gap: 9px; }
+  .capo-btn { width: 25px; height: 25px; border-radius: 50%; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; color: rgba(234,228,216,0.6); font-size: 14px; line-height: 1; transition: background 0.2s; }
+  .capo-value { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--linen); min-width: 52px; text-align: center; }
+  .recommended-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(196,154,74,0.13); border: 1px solid rgba(196,154,74,0.26); color: var(--gold); font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.07em; padding: 5px 10px; border-radius: 100px; }
+
+  /* COMMUNITY */
+  .community-section { background: var(--linen); }
+  .community-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; max-width: 1200px; margin: 0 auto; }
+  .community-text p { font-size: 15px; line-height: 1.82; color: var(--brown-mid); font-weight: 300; margin-bottom: 24px; }
+  .community-text p:last-child { margin-bottom: 0; }
+  .versions-list { display: flex; flex-direction: column; gap: 8px; }
+  .version-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--white); border: 1px solid rgba(92,61,30,0.1); border-radius: 12px; padding: 13px 16px; transition: all 0.25s; }
+  .version-row:hover { border-color: rgba(92,61,30,0.2); transform: translateX(4px); box-shadow: 0 4px 16px rgba(44,31,14,0.06); }
+  .version-row.active { background: var(--brown-deep); border-color: transparent; }
+  .version-name { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; color: var(--brown-deep); margin-bottom: 2px; }
+  .version-row.active .version-name { color: var(--linen); }
+  .version-meta { font-size: 10px; color: var(--brown-warm); }
+  .version-row.active .version-meta { color: rgba(234,228,216,0.42); }
+  .version-chords { display: flex; gap: 4px; flex-shrink: 0; }
+  .version-chord-tag { background: rgba(92,61,30,0.07); border-radius: 5px; padding: 3px 7px; font-size: 9px; font-family: 'Syne', sans-serif; font-weight: 500; color: var(--brown-mid); }
+  .version-row.active .version-chord-tag { background: rgba(234,228,216,0.1); color: rgba(234,228,216,0.62); }
+
+  /* TUNER */
+  .tuner-section { background: var(--white); padding: 80px 48px; }
+  .tuner-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .tuner-visual { display: flex; justify-content: center; }
+  .tuner-card { background: var(--linen); border-radius: 26px; padding: 40px 32px; width: 268px; text-align: center; border: 1px solid rgba(92,61,30,0.1); }
+  .tuner-needle-track { width: 100%; height: 2px; background: rgba(92,61,30,0.1); border-radius: 2px; position: relative; margin: 20px 0; }
+  .tuner-needle { position: absolute; width: 2px; height: 24px; background: var(--gold); top: -12px; left: 50%; transform: translateX(-50%); border-radius: 2px; animation: tuner-sway 3s ease-in-out infinite; }
+  @keyframes tuner-sway { 0%,100%{left:55%} 50%{left:50%} }
+  .tuner-note { font-family: 'Cormorant Garamond', serif; font-size: 64px; font-weight: 300; color: var(--brown-deep); line-height: 1; letter-spacing: -0.03em; }
+  .tuner-note sup { font-size: 24px; vertical-align: super; color: var(--brown-warm); }
+  .tuner-status { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-top: 6px; }
+  .tuner-strings { display: flex; justify-content: center; gap: 14px; margin-top: 24px; }
+  .tuner-string { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .tuner-string-note { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; color: var(--brown-warm); }
+  .tuner-string-note.active { color: var(--brown-deep); font-size: 12px; }
+  .tuner-string-octave { font-size: 8px; color: rgba(92,61,30,0.35); }
+  .tuner-string-octave.active { color: var(--gold); }
+
+  /* CTA */
+  .cta-section { background: var(--linen); text-align: center; padding: 120px 48px; position: relative; overflow: hidden; }
+  .cta-bg-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none; }
+  .cta-bg-circle.c1 { width: 480px; height: 480px; border: 1px solid rgba(92,61,30,0.07); }
+  .cta-bg-circle.c2 { width: 780px; height: 780px; border: 1px solid rgba(92,61,30,0.04); }
+  .cta-bg-circle.c3 { width: 1080px; height: 1080px; border: 1px solid rgba(92,61,30,0.025); }
+  .cta-content { position: relative; z-index: 2; max-width: 540px; margin: 0 auto; }
+  .cta-h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(44px,6vw,76px); font-weight: 300; line-height: 1.0; letter-spacing: -0.02em; color: var(--brown-deep); margin-bottom: 18px; }
+  .cta-h2 em { font-style: italic; color: var(--brown-warm); }
+  .cta-sub { font-size: 15px; color: var(--brown-mid); font-weight: 300; line-height: 1.75; margin-bottom: 40px; }
+  .app-store-btn { display: inline-flex; align-items: center; gap: 13px; background: var(--brown-deep); color: var(--linen-light); padding: 16px 32px; border-radius: 16px; text-decoration: none; transition: all 0.3s; box-shadow: 0 8px 32px rgba(44,31,14,0.18); }
+  .app-store-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(44,31,14,0.26); }
+  .app-store-small { font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.1em; opacity: 0.55; text-transform: uppercase; }
+  .app-store-large { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; }
+
+  /* FOOTER */
+  footer { background: var(--brown-deep); padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; }
+  .footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 400; color: rgba(234,228,216,0.5); }
+  .footer-copy { font-family: 'Syne', sans-serif; font-size: 10px; letter-spacing: 0.06em; color: rgba(234,228,216,0.26); }
+  .footer-links { display: flex; gap: 22px; list-style: none; flex-wrap: wrap; }
+  .footer-links a { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(234,228,216,0.36); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: rgba(234,228,216,0.72); }
+
+  /* REVEAL */
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.72s ease, transform 0.72s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+
+  /* MARQUEE */
+  .marquee-section { padding: 26px 0; overflow: hidden; border-top: 1px solid rgba(92,61,30,0.1); border-bottom: 1px solid rgba(92,61,30,0.1); background: var(--white); }
+  .marquee-track { display: flex; gap: 40px; animation: marquee 22s linear infinite; width: max-content; }
+  .marquee-item { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 300; color: var(--brown-warm); white-space: nowrap; opacity: 0.62; font-style: italic; }
+  .marquee-dot { color: var(--gold); font-style: normal; opacity: 1; }
+  @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 900px) {
+    nav { padding: 15px 20px; }
+    .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
+
+    .hero { grid-template-columns: 1fr; padding: 86px 20px 52px; text-align: center; gap: 0; min-height: auto; }
+    .hero-eyebrow { justify-content: center; }
+    .hero-sub { margin: 0 auto 32px; max-width: 100%; font-size: 15px; }
+    .hero-actions { justify-content: center; }
+    .hero-visual { display: none; }
+    .hero-bg-strings .string-line { display: none; }
+
+    .stats-bar { padding: 18px 20px; }
+    .stat-item::after { display: none; }
+    .stat-num { font-size: 30px; }
+
+    section { padding: 64px 20px; }
+
+    .how-grid { grid-template-columns: 1fr; gap: 40px; }
+    .how-visual { display: none; }
+
+    .edit-grid { grid-template-columns: 1fr; gap: 40px; }
+
+    .community-grid { grid-template-columns: 1fr; gap: 40px; }
+
+    .tuner-section { padding: 60px 20px; }
+    .tuner-inner { grid-template-columns: 1fr; gap: 40px; }
+    .tuner-visual { order: -1; }
+    .tuner-card { width: 100%; max-width: 300px; }
+
+    .cta-section { padding: 88px 20px; }
+    .cta-bg-circle.c1 { width: 280px; height: 280px; }
+    .cta-bg-circle.c2 { width: 480px; height: 480px; }
+    .cta-bg-circle.c3 { width: 680px; height: 680px; }
+
+    footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; gap: 14px; }
+  }
+
+  @media (max-width: 640px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .feature-cell.wide { grid-column: span 1; }
+    .feature-cell { padding: 28px 22px; }
+    .hero-h1 { font-size: clamp(40px, 11vw, 60px); }
+    .section-h2 { font-size: clamp(32px, 9vw, 48px); }
+    .app-store-btn { padding: 14px 24px; }
+    .stats-bar { gap: 0; }
+    .stat-item { min-width: 80px; padding: 6px 12px; }
+    .edit-modal { padding: 16px; }
+    .chord-picker-grid { grid-template-columns: repeat(4,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-close" id="menuClose">✕</div>
+  <a href="#how" onclick="closeMobileMenu()">How It Works</a>
+  <a href="#features" onclick="closeMobileMenu()">Features</a>
+  <a href="#community" onclick="closeMobileMenu()">Community</a>
+  <a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181" class="mobile-dl-btn">Download Now</a>
+</div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <a href="#" class="nav-logo">
+    <svg class="nav-logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="36" height="36" rx="9" fill="#2C1F0E"/>
+      <!-- Guitar body -->
+      <ellipse cx="18" cy="23" rx="9.5" ry="8.5" fill="#C49A4A" opacity="0.13"/>
+      <!-- Sound hole -->
+      <circle cx="18" cy="23" r="4.5" fill="#100A00"/>
+      <circle cx="18" cy="23" r="4.5" stroke="#C49A4A" stroke-width="1.1" fill="none" opacity="0.55"/>
+      <!-- Neck -->
+      <rect x="15.8" y="5" width="4.4" height="11.5" rx="1.4" fill="#8B6030" opacity="0.75"/>
+      <!-- Nut -->
+      <rect x="15" y="5" width="6" height="1.4" rx="0.7" fill="#EAE4D8" opacity="0.55"/>
+      <!-- Frets -->
+      <line x1="15.8" y1="8.5" x2="20.2" y2="8.5" stroke="#EAE4D8" stroke-width="0.55" opacity="0.4"/>
+      <line x1="15.8" y1="11.2" x2="20.2" y2="11.2" stroke="#EAE4D8" stroke-width="0.55" opacity="0.4"/>
+      <line x1="15.8" y1="13.8" x2="20.2" y2="13.8" stroke="#EAE4D8" stroke-width="0.55" opacity="0.4"/>
+      <!-- Strings -->
+      <line x1="15.2" y1="5" x2="15.2" y2="31" stroke="#EAE4D8" stroke-width="0.45" opacity="0.3"/>
+      <line x1="16.7" y1="5" x2="16.7" y2="31" stroke="#EAE4D8" stroke-width="0.45" opacity="0.3"/>
+      <line x1="18.2" y1="5" x2="18.2" y2="31" stroke="#EAE4D8" stroke-width="0.45" opacity="0.3"/>
+      <line x1="19.7" y1="5" x2="19.7" y2="31" stroke="#EAE4D8" stroke-width="0.45" opacity="0.3"/>
+      <!-- Bridge -->
+      <rect x="15" y="29.8" width="6" height="1.3" rx="0.65" fill="#EAE4D8" opacity="0.45"/>
+    </svg>
+    <span class="nav-logo-text">Strum</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#community">Community</a></li>
+    <li><a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181" class="nav-cta">Download Now</a></li>
+  </ul>
+  <div class="nav-hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-strings">
+    <div class="string-line"></div><div class="string-line"></div>
+    <div class="string-line"></div><div class="string-line"></div>
+    <div class="string-line"></div><div class="string-line"></div>
+  </div>
+  <div class="hero-text">
+    <div class="hero-eyebrow">For Every Guitarist</div>
+    <h1 class="hero-h1">Every song<br>you love,<br><em>ready to play.</em></h1>
+    <p class="hero-sub">Strum turns any song into guitar chords — instantly. AI-powered chord detection, over a million songs, and a community that keeps every chart alive.</p>
+    <div class="hero-actions">
+      <a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181" class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Download Now
+      </a>
+      <a href="#how" class="btn-ghost">
+        See how it works
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="phone-float-card float-card-1">
+      <div class="float-card-label">Strumming Pattern</div>
+      <div class="strum-arrows">
+        <div class="arrow-beat"><span>↓</span><small>1</small></div>
+        <div class="arrow-beat"><span style="opacity:.16">—</span><small>&</small></div>
+        <div class="arrow-beat"><span>↓</span><small>2</small></div>
+        <div class="arrow-beat"><span>↑</span><small>&</small></div>
+        <div class="arrow-beat"><span>↓</span><small>3</small></div>
+        <div class="arrow-beat"><span>↑</span><small>&</small></div>
+      </div>
+      <div class="float-card-sub" style="margin-top:6px">120 BPM</div>
+    </div>
+
+    <div class="phone-mockup">
+      <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+      <div class="phone-screen">
+        <div class="phone-song-title">Layla</div>
+        <div class="phone-artist">Eric Clapton</div>
+        <div class="phone-pills">
+          <div class="phone-pill outline">Capo — 6th fret</div>
+          <div class="phone-pill filled">Strumming</div>
+        </div>
+        <div class="chord-diagram-row">
+          <div class="mini-chord"><div class="mini-chord-name">G#</div><div class="mini-fretboard"><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-dot" style="top:9px;left:2px">2</div></div></div>
+          <div class="mini-chord"><div class="mini-chord-name">E</div><div class="mini-fretboard"><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-dot" style="top:5px;left:7px">1</div></div></div>
+          <div class="mini-chord"><div class="mini-chord-name">F#</div><div class="mini-fretboard"><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-dot" style="top:9px;left:7px">2</div></div></div>
+          <div class="mini-chord"><div class="mini-chord-name">Gm</div><div class="mini-fretboard"><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div><div class="fret-line"></div></div></div>
+        </div>
+        <div class="chord-chips-row">
+          <div class="chord-chip active">G#</div>
+          <div class="chord-chip">E</div>
+          <div class="chord-chip">G#</div>
+          <div class="chord-chip">E</div>
+          <div class="chord-chip">G#</div>
+        </div>
+        <div class="chord-chips-row">
+          <div class="chord-chip">G#m</div>
+          <div class="chord-chip">E</div>
+          <div class="chord-chip">F#</div>
+          <div class="chord-chip">G#m</div>
+        </div>
+        <div class="lyrics-block">
+          <div class="lyric-line"><span class="lyric-chord-marker">Gm</span>What will you do when you get</div>
+          <div class="lyric-line"><span class="lyric-chord-marker">Dm</span>older?</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-float-card float-card-2">
+      <div class="float-card-label">Tuner</div>
+      <div class="float-card-value">E<sup style="font-size:10px;color:var(--brown-warm)">4</sup></div>
+      <div class="float-card-sub" style="color:var(--gold)">In tune ✓</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar reveal">
+  <div class="stat-item"><div class="stat-num">1M<sup>+</sup></div><div class="stat-label">Songs Available</div></div>
+  <div class="stat-item"><div class="stat-num">4.8</div><div class="stat-label">App Store Rating</div></div>
+  <div class="stat-item"><div class="stat-num">6</div><div class="stat-label">Upload Methods</div></div>
+  <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">Community Versions</div></div>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track">
+    <span class="marquee-item">Layla <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Wonderwall <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Blackbird <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Hotel California <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Wake Me Up <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Sweet Home Chicago <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">YUKON <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Be By You <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">The Fate of Ophelia <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Let Me Love You Baby <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Layla <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Wonderwall <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Blackbird <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Hotel California <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Wake Me Up <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Sweet Home Chicago <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">YUKON <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Be By You <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">The Fate of Ophelia <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Let Me Love You Baby <span class="marquee-dot">·</span></span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="how-grid">
+    <div>
+      <div class="section-eyebrow reveal">How It Works</div>
+      <h2 class="section-h2 reveal reveal-delay-1">Three steps to<br><em>any song.</em></h2>
+      <div class="how-steps">
+        <div class="how-step reveal reveal-delay-1">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Find your song</div>
+            <div class="step-desc">Search over a million songs, paste a YouTube link, upload your own audio, record live, or use Shazam to identify a song playing near you.</div>
+          </div>
+        </div>
+        <div class="how-step reveal reveal-delay-2">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">AI maps every chord</div>
+            <div class="step-desc">Our AI analyzes the audio and generates accurate chord progressions with fingering diagrams, capo recommendations, and strumming patterns — in seconds.</div>
+          </div>
+        </div>
+        <div class="how-step reveal reveal-delay-3">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Play at your pace</div>
+            <div class="step-desc">Follow along with synchronized lyrics and chords. Slow playback, adjust the capo, edit any chord, or switch to a community version — it's entirely your call.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="how-visual reveal reveal-delay-2">
+      <div class="upload-methods">
+        <div class="upload-card featured"><span class="upload-card-icon">⚡</span><div class="upload-card-title">AI Chord Detection</div><div class="upload-card-desc">Upload any audio — AI identifies every chord instantly</div></div>
+        <div class="upload-card"><span class="upload-card-icon">▶️</span><div class="upload-card-title">YouTube</div><div class="upload-card-desc">Paste any video link</div></div>
+        <div class="upload-card"><span class="upload-card-icon">🎤</span><div class="upload-card-title">Record</div><div class="upload-card-desc">Live mic recording</div></div>
+        <div class="upload-card"><span class="upload-card-icon" style="font-size:20px">◎</span><div class="upload-card-title">Shazam</div><div class="upload-card-desc">Identify &amp; get chords instantly</div></div>
+        <div class="upload-card"><span class="upload-card-icon">📁</span><div class="upload-card-title">Files</div><div class="upload-card-desc">MP3, WAV, M4A</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div style="max-width:1200px;margin:0 auto;">
+    <div class="features-intro">
+      <div class="section-eyebrow reveal">Features</div>
+      <h2 class="section-h2 reveal reveal-delay-1">Everything a guitarist<br><em>actually needs.</em></h2>
+      <p class="reveal reveal-delay-2">Not a lesson app. Not a tab site. Strum bridges the gap between the music you hear and the music you play — with full control at every step.</p>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feature-cell dark wide">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">Smart Chord Recognition</div>
+        <div class="feature-desc">Advanced AI analyzes audio waveforms to identify chord progressions with the accuracy of a trained musician — not keyword lookup. Every change, every voicing, every passing chord.</div>
+        <span class="feature-tag">AI-Powered</span>
+      </div>
+      <div class="feature-cell">
+        <span class="feature-icon">♩</span>
+        <div class="feature-title">Strumming Patterns</div>
+        <div class="feature-desc">Visual down/up stroke guides with BPM control and audio playback. No notation required — just follow the arrows.</div>
+      </div>
+
+      <div class="feature-cell">
+        <span class="feature-icon">✏️</span>
+        <div class="feature-title">Edit Any Chord</div>
+        <div class="feature-desc">Tap any chord in the chart to replace it. Search by name, browse fingering diagrams, choose your voicing, and save — full control over every bar.</div>
+        <span class="feature-tag">Full Control</span>
+      </div>
+      <div class="feature-cell">
+        <span class="feature-icon">🎸</span>
+        <div class="feature-title">Smart Capo Settings</div>
+        <div class="feature-desc">Strum recommends the optimal capo position and retransposes every chord automatically. Adjust with ± and preview the full chord map before saving.</div>
+      </div>
+      <div class="feature-cell">
+        <span class="feature-icon">👥</span>
+        <div class="feature-title">Community Versions</div>
+        <div class="feature-desc">Every song has multiple chord arrangements contributed by real players — different chords, different capo positions, different takes on the same song.</div>
+        <span class="feature-tag">Community</span>
+      </div>
+
+      <div class="feature-cell">
+        <span class="feature-icon">🎵</span>
+        <div class="feature-title">1M+ Song Library</div>
+        <div class="feature-desc">From Avicii to Stevie Ray Vaughan — pre-built chord charts across every genre, instantly accessible.</div>
+      </div>
+      <div class="feature-cell">
+        <span class="feature-icon">◎</span>
+        <div class="feature-title">Built-In Tuner</div>
+        <div class="feature-desc">Chromatic tuner with real-time note detection. Multiple presets from Standard to Drop D — no app switching needed.</div>
+      </div>
+      <div class="feature-cell">
+        <span class="feature-icon">♫</span>
+        <div class="feature-title">Spotify &amp; Apple Music</div>
+        <div class="feature-desc">Connect your streaming account — Strum personalizes your chord library around the music you already love.</div>
+        <span class="feature-tag">Personalized</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EDIT + CAPO -->
+<section class="edit-section" id="edit">
+  <div class="edit-grid">
+    <div class="edit-text">
+      <div class="section-eyebrow reveal">Your Chords, Your Way</div>
+      <h2 class="section-h2 reveal reveal-delay-1">Edit chords.<br><em>Set your capo.</em><br>Own the song.</h2>
+      <p class="reveal reveal-delay-2">AI gets you close. But every player has their own style, key, and way of hearing a song. Strum gives you full control to make any chart your own.</p>
+      <div class="edit-features reveal reveal-delay-3">
+        <div class="edit-feature-row"><div class="edit-feature-dot"></div><div><div class="edit-feature-title">Tap to Edit Any Chord</div><div class="edit-feature-desc">Enter edit mode, tap any chord to replace it. Search by name or browse the full chord library with fingering diagrams.</div></div></div>
+        <div class="edit-feature-row"><div class="edit-feature-dot"></div><div><div class="edit-feature-title">Drag to Reorder</div><div class="edit-feature-desc">Rearrange chord positions with a long press and drag — no complicated menus.</div></div></div>
+        <div class="edit-feature-row"><div class="edit-feature-dot"></div><div><div class="edit-feature-title">Smart Capo Settings</div><div class="edit-feature-desc">Strum recommends the optimal capo position and retransposes all chords. Adjust with ± controls and preview before saving.</div></div></div>
+        <div class="edit-feature-row"><div class="edit-feature-dot"></div><div><div class="edit-feature-title">Chord Variations</div><div class="edit-feature-desc">Multiple voicing options for every chord — choose the shape that fits your hand and your sound.</div></div></div>
+      </div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="edit-modal">
+        <div class="edit-modal-title">Edit Chord</div>
+        <div class="chord-picker-grid">
+          <div class="chord-pick selected"><div class="chord-pick-name">G#m</div><div class="mini-fretboard-dark"></div></div>
+          <div class="chord-pick"><div class="chord-pick-name">A</div><div class="mini-fretboard-dark"></div></div>
+          <div class="chord-pick"><div class="chord-pick-name">B</div><div class="mini-fretboard-dark"></div></div>
+          <div class="chord-pick"><div class="chord-pick-name">C</div><div class="mini-fretboard-dark"></div></div>
+          <div class="chord-pick"><div class="chord-pick-name">D</div><div class="mini-fretboard-dark"></div></div>
+          <div class="chord-pick"><div class="chord-pick-name">G#</div><div class="mini-fretboard-dark"></div></div>
+          <div class="chord-pick"><div class="chord-pick-name">Am</div><div class="mini-fretboard-dark"></div></div>
+          <div class="chord-pick"><div class="chord-pick-name">Bm</div><div class="mini-fretboard-dark"></div></div>
+          <div class="chord-pick"><div class="chord-pick-name">Cm</div><div class="mini-fretboard-dark"></div></div>
+          <div class="chord-pick"><div class="chord-pick-name">Dm</div><div class="mini-fretboard-dark"></div></div>
+        </div>
+        <div class="edit-modal-btns">
+          <div class="modal-btn secondary">Select Variation</div>
+          <div class="modal-btn primary-btn">Save</div>
+        </div>
+      </div>
+      <div class="capo-card">
+        <div class="capo-header">
+          <div class="capo-label">Capo Settings</div>
+          <div class="capo-controls">
+            <div class="capo-btn">−</div>
+            <div class="capo-value">6th fret</div>
+            <div class="capo-btn">+</div>
+          </div>
+        </div>
+        <div class="recommended-badge">★ &nbsp;Recommended — 6th fret</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section class="community-section" id="community">
+  <div class="community-grid">
+    <div class="community-text">
+      <div class="section-eyebrow reveal">Community Library</div>
+      <h2 class="section-h2 reveal reveal-delay-1">Every song,<br><em>countless ways</em><br>to play it.</h2>
+      <p class="reveal reveal-delay-2">Every song on Strum has multiple chord versions contributed by real players. Strum's AI generates the official arrangement, and the community adds their own — different chords, different capo positions, different approaches to the same song.</p>
+      <p class="reveal reveal-delay-3">Prefer open chords to barre chords? Want the most accurate original key? The community has you covered.</p>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--brown-warm);margin-bottom:13px;">Layla — Eric Clapton</div>
+      <div class="versions-list">
+        <div class="version-row active">
+          <div class="version-info"><div class="version-name">Strum AI Version</div><div class="version-meta">Official · Capo 6th fret</div></div>
+          <div class="version-chords"><span class="version-chord-tag">G#</span><span class="version-chord-tag">E</span><span class="version-chord-tag">F#</span></div>
+        </div>
+        <div class="version-row">
+          <div class="version-info"><div class="version-name">Beginner Friendly</div><div class="version-meta">jsclapton92 · No capo</div></div>
+          <div class="version-chords"><span class="version-chord-tag">Am</span><span class="version-chord-tag">G</span><span class="version-chord-tag">F</span></div>
+        </div>
+        <div class="version-row">
+          <div class="version-info"><div class="version-name">Original Key</div><div class="version-meta">guitar_theorist · No capo</div></div>
+          <div class="version-chords"><span class="version-chord-tag">Dm</span><span class="version-chord-tag">Bb</span><span class="version-chord-tag">C</span></div>
+        </div>
+        <div class="version-row">
+          <div class="version-info"><div class="version-name">Capo 5 Arrangement</div><div class="version-meta">fingerpick_folk · Capo 5th fret</div></div>
+          <div class="version-chords"><span class="version-chord-tag">A</span><span class="version-chord-tag">F</span><span class="version-chord-tag">Am</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TUNER -->
+<section class="tuner-section">
+  <div class="tuner-inner">
+    <div>
+      <div class="section-eyebrow reveal">Built-In Tuner</div>
+      <h2 class="section-h2 reveal reveal-delay-1" style="font-size:clamp(32px,3.5vw,52px)">Always in tune.<br><em>Always ready.</em></h2>
+      <p class="reveal reveal-delay-2" style="font-size:14px;line-height:1.82;color:var(--brown-mid);font-weight:300;max-width:360px;margin-top:12px;margin-bottom:26px;">A chromatic tuner built right into the app. No switching apps, no ads, no noise. Pluck a string — Strum tells you exactly where you are.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;" class="reveal reveal-delay-3">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--brown-mid);font-weight:300;"><span style="color:var(--gold)">✓</span> Standard, Drop D, Open G, and more tuning presets</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--brown-mid);font-weight:300;"><span style="color:var(--gold)">✓</span> Real-time frequency detection via microphone</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--brown-mid);font-weight:300;"><span style="color:var(--gold)">✓</span> Clear sharp / flat guidance on screen</div>
+      </div>
+    </div>
+    <div class="tuner-visual reveal reveal-delay-2">
+      <div class="tuner-card">
+        <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:var(--brown-warm);margin-bottom:6px;">Standard Tuning</div>
+        <div class="tuner-note">E<sup>4</sup></div>
+        <div class="tuner-needle-track"><div class="tuner-needle"></div></div>
+        <div class="tuner-status">In tune ✓</div>
+        <div class="tuner-strings">
+          <div class="tuner-string"><div class="tuner-string-note">E</div><div class="tuner-string-octave">2</div></div>
+          <div class="tuner-string"><div class="tuner-string-note">A</div><div class="tuner-string-octave">2</div></div>
+          <div class="tuner-string"><div class="tuner-string-note">D</div><div class="tuner-string-octave">3</div></div>
+          <div class="tuner-string"><div class="tuner-string-note">G</div><div class="tuner-string-octave">3</div></div>
+          <div class="tuner-string"><div class="tuner-string-note">B</div><div class="tuner-string-octave">3</div></div>
+          <div class="tuner-string"><div class="tuner-string-note active">E</div><div class="tuner-string-octave active">4</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-bg-circle c1"></div>
+  <div class="cta-bg-circle c2"></div>
+  <div class="cta-bg-circle c3"></div>
+  <div class="cta-content reveal">
+    <h2 class="cta-h2">Your guitar<br>is <em>waiting.</em></h2>
+    <p class="cta-sub">Free to download. No music theory required. Every song you love, one tap away.</p>
+    <a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181" class="app-store-btn">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#EAE4D8"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      <div>
+        <div class="app-store-small">Download on the</div>
+        <div class="app-store-large">App Store</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Strum</div>
+  <ul class="footer-links">
+    <li><a href="#">Privacy</a></li>
+    <li><a href="#">Terms</a></li>
+    <li><a href="#">Support</a></li>
+    <li><a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181">App Store</a></li>
+  </ul>
+  <div class="footer-copy">© 2026 Strum. All rights reserved.</div>
+</footer>
+
+<script>
+  // ── CURSOR (desktop / mouse only) ──
+  const hasMouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (hasMouse) {
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    cursor.style.display = 'block';
+    ring.style.display = 'block';
+
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
+
+    (function loop() {
+      cursor.style.left = mx + 'px';
+      cursor.style.top = my + 'px';
+      // Snappier lerp: 0.25 vs old 0.12
+      rx += (mx - rx) * 0.25;
+      ry += (my - ry) * 0.25;
+      ring.style.left = rx + 'px';
+      ring.style.top = ry + 'px';
+      requestAnimationFrame(loop);
+    })();
+
+    document.querySelectorAll('a, .upload-card, .how-step, .feature-cell, .version-row, .chord-pick, .capo-btn').forEach(el => {
+      el.addEventListener('mouseenter', () => { cursor.classList.add('hover'); ring.classList.add('hover'); });
+      el.addEventListener('mouseleave', () => { cursor.classList.remove('hover'); ring.classList.remove('hover'); });
+    });
+  }
+
+  // ── NAV SCROLL ──
+  const nav = document.getElementById('mainNav');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 60), { passive: true });
+
+  // ── MOBILE MENU ──
+  document.getElementById('hamburger').addEventListener('click', () => document.getElementById('mobileMenu').classList.add('open'));
+  document.getElementById('menuClose').addEventListener('click', () => document.getElementById('mobileMenu').classList.remove('open'));
+  function closeMobileMenu() { document.getElementById('mobileMenu').classList.remove('open'); }
+
+  // ── SCROLL REVEAL ──
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ── SMOOTH SCROLL ──
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const href = a.getAttribute('href');
+      if (href === '#') return;
+      const t = document.querySelector(href);
+      if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+</script>
+</body>
+</html>
