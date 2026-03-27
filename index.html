@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Strum — Play Every Song You Love</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&family=Syne:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  color-scheme: light only;
+  --linen: #EAE4D8; --linen-light: #F4F0E8;
+  --brown-deep: #2C1F0E; --brown-mid: #5C3D1E; --brown-warm: #8B6030;
+  --gold: #C49A4A; --gold-light: #D4AE6A;
+  --cream-card: #F2EBD9; --cream-warm: #EDE3CC; --white: #FDFAF4;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--linen) !important; color: var(--brown-deep) !important; font-family: 'DM Sans', sans-serif; font-weight: 300; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+@media (hover: hover) and (pointer: fine) { body { cursor: none; } }
+body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 1000; opacity: 0.35; }
+
+/* CURSOR */
+.cursor { position: fixed; width: 8px; height: 8px; background: var(--brown-deep); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); will-change: left,top; transition: transform 0.12s ease; display: none; }
+.cursor-ring { position: fixed; width: 30px; height: 30px; border: 1px solid var(--brown-warm); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); opacity: 0.5; will-change: left,top; transition: opacity 0.2s; display: none; }
+.cursor.hover { transform: translate(-50%,-50%) scale(2.5); }
+.cursor-ring.hover { opacity: 0.15; }
+
+/* NAV */
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; transition: background 0.4s, box-shadow 0.4s; }
+nav.scrolled { background: rgba(234,228,216,0.93) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 1px 0 rgba(92,61,30,0.1); }
+.nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+.nav-logo-icon { width: 36px; height: 36px; flex-shrink: 0; }
+.nav-logo-text { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 500; color: var(--brown-deep); letter-spacing: 0.02em; }
+.nav-links { display: flex; gap: 36px; list-style: none; align-items: center; }
+.nav-links a { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brown-warm); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--brown-deep); }
+.nav-cta { background: var(--brown-deep) !important; color: var(--linen-light) !important; padding: 10px 22px !important; border-radius: 100px !important; transition: background 0.2s, transform 0.2s !important; }
+.nav-cta:hover { background: var(--brown-mid) !important; transform: translateY(-1px) !important; }
+.nav-hamburger { display: none; flex-direction: column; gap: 5px; padding: 4px; cursor: pointer; }
+.nav-hamburger span { display: block; width: 22px; height: 1.5px; background: var(--brown-deep); border-radius: 2px; transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease; transform-origin: center; }
+.nav-hamburger.active span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.nav-hamburger.active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.nav-hamburger.active span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+/* MOBILE MENU */
+.mobile-menu { display: flex; position: fixed; inset: 0; background: rgba(234,228,216,0.98); z-index: 210; flex-direction: column; align-items: center; justify-content: center; gap: 32px; backdrop-filter: blur(20px); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.42s cubic-bezier(0.4,0,0.2,1), visibility 0.42s; }
+.mobile-menu.open { opacity: 1; visibility: visible; pointer-events: auto; }
+.mobile-menu > * { opacity: 0; transform: translateY(18px); transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+.mobile-menu.open > *:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.12s; }
+.mobile-menu.open > *:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.2s; }
+.mobile-menu.open > *:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.28s; }
+.mobile-menu.open > *:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.36s; }
+.mobile-menu.open > *:nth-child(5) { opacity: 1; transform: none; transition-delay: 0.44s; }
+.mobile-menu a { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 300; color: var(--brown-deep); text-decoration: none; }
+.mobile-menu-close { position: absolute; top: 24px; right: 28px; font-size: 28px; color: var(--brown-warm); cursor: pointer; font-weight: 300; z-index: 211; }
+.mobile-dl-btn { font-family: 'Syne', sans-serif !important; font-size: 13px !important; background: var(--brown-deep); color: var(--linen) !important; padding: 14px 32px !important; border-radius: 100px; letter-spacing: 0.08em; }
+
+/* BOTTOM SHEET (mobile) */
+.sheet-backdrop { display: none; position: fixed; inset: 0; background: rgba(44,31,14,0.4); z-index: 300; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
+.sheet-backdrop.open { display: block; }
+.bottom-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 301;
+  background: var(--white); border-radius: 24px 24px 0 0;
+  padding: 0 0 env(safe-area-inset-bottom,20px);
+  transform: translateY(100%);
+  transition: transform 0.38s cubic-bezier(.32,.72,0,1);
+  height: 85vh; overflow-y: auto;
+  box-shadow: 0 -8px 48px rgba(44,31,14,0.18);
+}
+.bottom-sheet.open { transform: translateY(0); }
+.sheet-handle-bar { display: flex; justify-content: center; padding: 14px 0 10px; position: sticky; top: 0; background: var(--white); z-index: 1; }
+.sheet-handle { width: 40px; height: 4px; background: rgba(92,61,30,0.15); border-radius: 4px; }
+.sheet-inner {
+  padding: 0 28px 28px;
+  display: grid;
+  grid-template-columns: clamp(140px, 38%, 200px) 1fr;
+  grid-template-areas: "eyebrow eyebrow" "screenshot title" "screenshot body";
+  gap: 0 24px;
+  align-items: start;
+}
+.sheet-eyebrow { grid-area: eyebrow; font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; padding-top: 4px; }
+.sheet-title { grid-area: title; font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 400; color: var(--brown-deep); margin-bottom: 10px; line-height: 1.1; align-self: end; }
+.sheet-body { grid-area: body; font-size: 14px; line-height: 1.75; color: var(--brown-mid); font-weight: 300; }
+.sheet-phone-wrap { grid-area: screenshot; display: flex; align-self: start; }
+.sheet-screenshot { width: 100%; border-radius: 16px; overflow: hidden; background: #F0EDE6; }
+.sheet-screenshot img { display: block; width: 100%; height: auto; }
+.sheet-inner.no-phone { grid-template-columns: 1fr; grid-template-areas: "eyebrow" "title" "body"; }
+@media (max-width: 480px) {
+  .sheet-inner { grid-template-columns: 1fr; grid-template-areas: "eyebrow" "title" "screenshot" "body"; }
+  .sheet-phone-wrap { margin-bottom: 16px; }
+}
+
+/* HERO */
+.hero { min-height: 100svh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 100px 48px 80px; gap: 60px; position: relative; overflow: hidden; }
+.hero-bg-strings { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.string-line { position: absolute; top: 0; bottom: 0; width: 1px; background: linear-gradient(to bottom, transparent, rgba(92,61,30,0.07) 20%, rgba(92,61,30,0.1) 50%, rgba(92,61,30,0.07) 80%, transparent); animation: string-vibrate 6s ease-in-out infinite; }
+.string-line:nth-child(1){left:8%;animation-delay:0s} .string-line:nth-child(2){left:14%;animation-delay:0.8s} .string-line:nth-child(3){left:20%;animation-delay:1.6s} .string-line:nth-child(4){left:26%;animation-delay:2.4s} .string-line:nth-child(5){left:32%;animation-delay:3.2s} .string-line:nth-child(6){left:38%;animation-delay:4s}
+@keyframes string-vibrate { 0%,100%{transform:scaleX(1);opacity:0.6} 25%{transform:scaleX(2) translateX(2px);opacity:1} 75%{transform:scaleX(2) translateX(-2px);opacity:1} }
+.hero-text { position: relative; z-index: 2; }
+.hero-eyebrow { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; opacity: 0; animation: fade-up 0.8s ease forwards 0.2s; }
+.hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
+.hero-h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(48px,5.5vw,86px); font-weight: 300; line-height: 1.0; color: var(--brown-deep); letter-spacing: -0.02em; margin-bottom: 28px; opacity: 0; animation: fade-up 0.9s ease forwards 0.4s; }
+.hero-h1 em { font-style: italic; color: var(--brown-warm); }
+.hero-sub { font-size: 16px; font-weight: 300; color: var(--brown-mid); line-height: 1.75; max-width: 420px; margin-bottom: 44px; opacity: 0; animation: fade-up 0.9s ease forwards 0.6s; }
+.hero-actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; opacity: 0; animation: fade-up 0.9s ease forwards 0.8s; }
+.btn-primary { display: inline-flex; align-items: center; gap: 10px; background: var(--brown-deep); color: var(--linen-light); padding: 15px 30px; border-radius: 100px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-decoration: none; white-space: nowrap; transition: background 0.25s, transform 0.25s, box-shadow 0.25s; box-shadow: 0 4px 24px rgba(44,31,14,0.2); }
+.btn-primary:hover { background: var(--brown-mid); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(44,31,14,0.3); }
+.btn-ghost { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brown-warm); text-decoration: none; display: flex; align-items: center; gap: 8px; transition: color 0.2s, gap 0.2s; white-space: nowrap; }
+.btn-ghost:hover { color: var(--brown-deep); gap: 12px; }
+
+/* HERO VISUAL */
+.hero-visual { position: relative; z-index: 2; display: flex; justify-content: center; align-items: center; opacity: 0; animation: fade-in 1.2s ease forwards 0.7s; }
+.hero-screenshot { width: 248px; border-radius: 38px; box-shadow: 0 0 0 1px rgba(44,31,14,0.07), 0 24px 72px rgba(44,31,14,0.15); transform: rotate(2.5deg); position: relative; z-index: 2; transition: transform 0.4s ease; display: block; }
+.hero-screenshot:hover { transform: rotate(0deg) scale(1.02); }
+.phone-notch { height: 25px; background: var(--brown-deep); display: flex; align-items: center; justify-content: center; }
+.phone-notch-pill { width: 68px; height: 9px; background: #1a1000; border-radius: 10px; }
+.phone-screen { padding: 13px 11px; background: #F0EDE6; min-height: 450px; }
+.phone-song-title { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 500; color: var(--brown-deep); margin-bottom: 2px; }
+.phone-artist { font-size: 10px; color: var(--brown-warm); margin-bottom: 11px; font-family: 'Syne', sans-serif; letter-spacing: 0.05em; }
+.phone-pills { display: flex; gap: 5px; margin-bottom: 11px; }
+.phone-pill { font-size: 8px; padding: 3px 8px; border-radius: 100px; font-family: 'Syne', sans-serif; font-weight: 500; }
+.phone-pill.outline { border: 1px solid var(--brown-warm); color: var(--brown-warm); }
+.phone-pill.filled { background: var(--cream-warm); color: var(--brown-mid); }
+.chord-diagram-row { background: var(--cream-card); border-radius: 10px; padding: 8px 6px; display: flex; gap: 5px; margin-bottom: 11px; }
+.mini-chord { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.mini-chord-name { font-size: 8px; font-family: 'Syne', sans-serif; font-weight: 500; color: var(--brown-deep); }
+.mini-fretboard { width: 25px; height: 30px; border: 1px solid rgba(44,31,14,0.2); border-radius: 2px; position: relative; display: grid; grid-template-columns: repeat(4,1fr); grid-template-rows: repeat(4,1fr); }
+.mini-fretboard::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--brown-deep); border-radius: 1px; }
+.fret-line { border-right: 1px solid rgba(44,31,14,0.1); border-bottom: 1px solid rgba(44,31,14,0.1); }
+.fret-dot { position: absolute; width: 7px; height: 7px; background: var(--brown-deep); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--linen); font-size: 5px; font-weight: 600; }
+.chord-chips-row { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 5px; }
+.chord-chip { background: rgba(44,31,14,0.07); border-radius: 5px; padding: 3px 7px; font-size: 8px; font-family: 'Syne', sans-serif; font-weight: 500; color: var(--brown-mid); }
+.chord-chip.active { background: var(--brown-deep); color: var(--linen); }
+.lyrics-block { margin-top: 7px; }
+.lyric-line { font-size: 9px; color: rgba(44,31,14,0.36); line-height: 2.1; font-style: italic; }
+.lyric-chord-marker { display: inline-block; background: var(--brown-deep); color: var(--linen); border-radius: 3px; padding: 1px 4px; font-size: 7px; font-family: 'Syne', sans-serif; margin-right: 2px; vertical-align: middle; }
+.phone-float-card { position: absolute; background: var(--white); border-radius: 13px; padding: 12px 13px; box-shadow: 0 8px 32px rgba(44,31,14,0.12); z-index: 3; }
+.float-card-1 { top: 48px; right: -26px; width: 168px; transform: rotate(-3deg); }
+.float-card-2 { bottom: 64px; left: -36px; width: 136px; transform: rotate(2deg); }
+.float-card-label { font-family: 'Syne', sans-serif; font-size: 8px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
+.float-card-value { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: var(--brown-deep); }
+.float-card-sub { font-size: 9px; color: var(--brown-warm); margin-top: 2px; }
+.strum-arrows { display: flex; gap: 1px; margin-top: 4px; align-items: center; }
+.arrow-beat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.arrow-beat span { font-size: 9px; color: var(--brown-deep); font-weight: 600; }
+.arrow-beat small { font-size: 7px; color: var(--brown-warm); }
+@keyframes fade-up { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fade-in { from{opacity:0} to{opacity:1} }
+
+/* STATS */
+.stats-bar { border-top: 1px solid rgba(92,61,30,0.12); border-bottom: 1px solid rgba(92,61,30,0.12); padding: 24px 48px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.28); flex-wrap: wrap; gap: 12px; }
+.stat-item { flex: 1; min-width: 100px; text-align: center; position: relative; padding: 8px 16px; }
+.stat-item::after { content: ''; position: absolute; right: 0; top: 15%; bottom: 15%; width: 1px; background: rgba(92,61,30,0.12); }
+.stat-item:last-child::after { display: none; }
+.stat-num { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 300; color: var(--brown-deep); line-height: 1; letter-spacing: -0.02em; }
+.stat-num sup { font-size: 18px; vertical-align: super; }
+.stat-label { font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brown-warm); margin-top: 4px; }
+
+/* SECTION BASE */
+section { padding: 100px 48px; }
+.section-eyebrow { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+.section-eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--gold); }
+.section-h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(36px,4vw,64px); font-weight: 300; line-height: 1.05; letter-spacing: -0.02em; color: var(--brown-deep); margin-bottom: 20px; }
+.section-h2 em { font-style: italic; color: var(--brown-warm); }
+
+/* MARQUEE */
+.marquee-section { padding: 26px 0; overflow: hidden; border-top: 1px solid rgba(92,61,30,0.1); border-bottom: 1px solid rgba(92,61,30,0.1); background: var(--white); }
+.marquee-track { display: flex; gap: 40px; animation: marquee 22s linear infinite; width: max-content; }
+.marquee-item { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 300; color: var(--brown-warm); white-space: nowrap; opacity: 0.62; font-style: italic; }
+.marquee-dot { color: var(--gold); font-style: normal; }
+@keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+/* HOW IT WORKS */
+.how-section { background: var(--white); }
+.how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; max-width: 1200px; margin: 0 auto; }
+.how-step { display: flex; gap: 20px; padding: 26px 0; border-bottom: 1px solid rgba(92,61,30,0.1); transition: all 0.3s; }
+.how-step:first-child { padding-top: 0; }
+.how-step:last-child { border-bottom: none; }
+.how-step:hover .step-num { background: var(--brown-deep); color: var(--linen); }
+.step-num { width: 40px; height: 40px; border: 1px solid rgba(92,61,30,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 400; color: var(--brown-warm); flex-shrink: 0; transition: all 0.3s; }
+.step-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--brown-deep); margin-bottom: 6px; }
+.step-desc { font-size: 13px; line-height: 1.7; color: var(--brown-mid); font-weight: 300; }
+
+/* UPLOAD INTERACTIVE */
+.upload-interactive { width: 100%; }
+.upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.upload-card {
+  background: var(--linen-light); border: 1px solid rgba(92,61,30,0.1); border-radius: 17px;
+  padding: 20px 16px; text-align: center; transition: all 0.25s; cursor: pointer;
+}
+.upload-card:hover { background: var(--white); border-color: rgba(92,61,30,0.22); transform: translateY(-3px); box-shadow: 0 10px 28px rgba(44,31,14,0.08); }
+.upload-card.active-card { background: var(--white); border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 8px 24px rgba(44,31,14,0.1); transform: translateY(-2px); }
+.upload-card.featured { background: var(--brown-deep); border-color: transparent; grid-column: span 2; }
+.upload-card.featured:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(44,31,14,0.2); }
+.upload-card.featured.active-card { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.upload-card-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+.upload-card-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; color: var(--brown-deep); margin-bottom: 3px; }
+.upload-card-desc { font-size: 10px; color: var(--brown-warm); line-height: 1.5; }
+.upload-card.featured .upload-card-title { color: var(--linen); }
+.upload-card.featured .upload-card-desc { color: rgba(234,228,216,0.5); }
+
+/* UPLOAD PREVIEW PANEL (desktop) */
+.upload-preview-panel {
+  background: var(--linen-light); border: 1px solid rgba(92,61,30,0.1); border-radius: 20px;
+  padding: 28px 32px; display: none; align-items: center; gap: 32px;
+  margin-top: 0; animation: panel-in 0.3s ease;
+  grid-column: span 2;
+  border-top: 2px solid var(--gold);
+}
+.upload-preview-panel.visible { display: flex; }
+@keyframes panel-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.panel-screenshot { width: clamp(140px, 32%, 220px); flex-shrink: 0; border-radius: 20px; overflow: hidden; align-self: stretch; min-height: 240px; background: #F0EDE6; box-shadow: 0 8px 32px rgba(44,31,14,0.12); }
+.panel-screenshot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.panel-screen-label { font-family: 'Syne', sans-serif; font-size: 8px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brown-warm); margin-bottom: 2px; }
+.panel-screen-title { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 500; color: var(--brown-deep); margin-bottom: 6px; }
+.panel-text { flex: 1; }
+.panel-text h4 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; color: var(--brown-deep); margin-bottom: 10px; letter-spacing: -0.01em; line-height: 1.1; }
+.panel-text p { font-size: 14px; line-height: 1.78; color: var(--brown-mid); font-weight: 300; max-width: 380px; }
+
+/* FEATURES */
+.features-section { background: var(--linen); }
+.features-intro { max-width: 540px; margin-bottom: 64px; }
+.features-intro p { font-size: 15px; line-height: 1.8; color: var(--brown-mid); font-weight: 300; }
+.features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; background: rgba(92,61,30,0.1); border: 1px solid rgba(92,61,30,0.1); border-radius: 22px; overflow: hidden; }
+.feature-cell { background: var(--linen-light); padding: 38px 30px; transition: background 0.3s; position: relative; overflow: hidden; cursor: pointer; }
+.feature-cell::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--gold); transform: scaleX(0); transform-origin: left; transition: transform 0.35s ease; }
+.feature-cell:hover { background: var(--white); }
+.feature-cell:hover::after, .feature-cell.fc-active::after { transform: scaleX(1); }
+.feature-cell.fc-active { background: var(--white); }
+.feature-cell.dark { background: var(--brown-deep); }
+.feature-cell.dark:hover, .feature-cell.dark.fc-active { background: var(--brown-mid); }
+.feature-cell.dark .feature-title { color: var(--linen); }
+.feature-cell.dark .feature-desc { color: rgba(234,228,216,0.56); }
+.feature-cell.dark .feature-icon { color: var(--gold); }
+.feature-cell.wide { grid-column: span 2; }
+.feature-icon { font-size: 21px; margin-bottom: 16px; display: block; color: var(--gold); }
+.feature-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; color: var(--brown-deep); margin-bottom: 8px; line-height: 1.2; }
+.feature-desc { font-size: 13px; line-height: 1.7; color: var(--brown-mid); font-weight: 300; }
+.feature-tag { display: inline-block; margin-top: 12px; font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); padding: 4px 10px; border: 1px solid rgba(196,154,74,0.3); border-radius: 100px; }
+
+/* FEATURE PREVIEW PANEL */
+.feature-preview-row { grid-column: span 3; background: var(--white); border-top: 2px solid var(--gold); display: none; }
+.feature-preview-row.fp-visible { display: block; }
+.feature-preview-inner { padding: 40px 48px; display: grid; grid-template-columns: clamp(180px, 30%, 260px) 1fr; gap: 48px; align-items: center; animation: panel-in 0.3s ease; }
+.fp-screenshot { width: clamp(180px, 30%, 260px); flex-shrink: 0; border-radius: 22px; overflow: hidden; align-self: stretch; min-height: 260px; background: #F0EDE6; box-shadow: 0 8px 32px rgba(44,31,14,0.12); }
+.fp-screenshot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.fp-text {}
+.fp-text h4 { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; color: var(--brown-deep); margin-bottom: 12px; line-height: 1.1; letter-spacing: -0.01em; }
+.fp-text p { font-size: 15px; line-height: 1.82; color: var(--brown-mid); font-weight: 300; max-width: 480px; }
+.fp-close { margin-top: 24px; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brown-warm); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s; opacity: 0.7; }
+.fp-close:hover { color: var(--brown-deep); opacity: 1; }
+
+/* EDIT */
+.edit-section { background: var(--brown-deep); position: relative; overflow: hidden; }
+.edit-section::before { content: ''; position: absolute; top: -200px; right: -200px; width: 560px; height: 560px; border-radius: 50%; background: rgba(139,96,48,0.07); pointer-events: none; }
+.edit-section .section-eyebrow { color: var(--gold-light); }
+.edit-section .section-eyebrow::before { background: var(--gold-light); }
+.edit-section .section-h2 { color: var(--linen); }
+.edit-section .section-h2 em { color: var(--gold); }
+.edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; max-width: 1200px; margin: 0 auto; }
+.edit-text p { font-size: 15px; line-height: 1.8; color: rgba(234,228,216,0.6); font-weight: 300; margin-bottom: 32px; }
+.edit-features { display: flex; flex-direction: column; }
+.edit-feature-row { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid rgba(234,228,216,0.07); }
+.edit-feature-row:last-child { border-bottom: none; }
+.edit-feature-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); margin-top: 8px; flex-shrink: 0; }
+.edit-feature-title { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 500; color: var(--linen); margin-bottom: 3px; }
+.edit-feature-desc { font-size: 12px; color: rgba(234,228,216,0.45); line-height: 1.6; font-weight: 300; }
+
+/* INTERACTIVE CHORD PICKER */
+.edit-interactive { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 22px; }
+.edit-modal-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: var(--linen); margin-bottom: 16px; text-align: center; }
+.chord-picker-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin-bottom: 16px; }
+.chord-pick { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 5px; text-align: center; transition: background 0.2s; cursor: pointer; }
+.chord-pick:hover { background: rgba(255,255,255,0.12); }
+.chord-pick.selected { background: var(--gold); border-color: var(--gold); }
+.chord-pick-name { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; color: rgba(234,228,216,0.72); }
+.chord-pick.selected .chord-pick-name { color: var(--brown-deep); }
+.mini-fretboard-dark { width: 100%; height: 28px; border: 1px solid rgba(234,228,216,0.16); border-radius: 2px; margin: 5px auto 0; position: relative; overflow: hidden; }
+.mini-fretboard-dark::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(234,228,216,0.25); }
+.chord-pick.selected .mini-fretboard-dark { border-color: rgba(44,31,14,0.25); }
+.chord-pick.selected .mini-fretboard-dark::before { background: rgba(44,31,14,0.35); }
+.mfd-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: rgba(234,228,216,0.7); }
+.chord-pick.selected .mfd-dot { background: rgba(44,31,14,0.7); }
+.mfd-mute { position: absolute; top: 2px; font-size: 7px; color: rgba(234,228,216,0.4); transform: translateX(-50%); line-height: 1; }
+.mfd-mute::after { content: '×'; }
+.chord-pick.selected .mfd-mute { color: rgba(44,31,14,0.45); }
+.var-card .mfd-mute { color: rgba(234,228,216,0.4); }
+.var-card-selected .mfd-mute { color: rgba(44,31,14,0.45); }
+
+/* LARGE FRETBOARD */
+.large-fretboard-wrap { margin-bottom: 16px; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 14px 16px; }
+.lfb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.lfb-chord-name { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 400; color: var(--linen); line-height: 1; }
+.lfb-chord-desc { font-size: 11px; color: rgba(234,228,216,0.45); font-weight: 300; margin-top: 2px; }
+.lfb-board { width: 100%; height: 100px; position: relative; }
+.lfb-string { position: absolute; top: 14px; bottom: 0; width: 1px; background: rgba(234,228,216,0.25); }
+.lfb-fret { position: absolute; left: 0; right: 0; height: 1px; background: rgba(234,228,216,0.15); }
+.lfb-nut { position: absolute; left: 0; right: 0; top: 14px; height: 3px; background: rgba(234,228,216,0.5); border-radius: 1px; }
+.lfb-dot { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: var(--brown-deep); transform: translate(-50%,-50%); transition: all 0.25s ease; }
+.lfb-open { position: absolute; top: 0; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(234,228,216,0.5); transform: translateX(-50%); }
+.lfb-muted { position: absolute; top: 2px; font-size: 10px; color: rgba(234,228,216,0.3); transform: translateX(-50%); }
+.lfb-fret-label { position: absolute; top: 16px; right: -2px; font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; color: rgba(234,228,216,0.4); letter-spacing: 0.04em; }
+
+/* CAPO CARD */
+.capo-card { margin-top: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 13px; padding: 16px; }
+.capo-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; }
+.capo-label-text { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; color: rgba(234,228,216,0.6); letter-spacing: 0.08em; text-transform: uppercase; }
+.capo-controls { display: flex; align-items: center; gap: 9px; }
+.capo-btn { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.08); border: none; display: flex; align-items: center; justify-content: center; color: rgba(234,228,216,0.7); font-size: 16px; line-height: 1; cursor: pointer; transition: background 0.2s; }
+.capo-btn:hover { background: rgba(255,255,255,0.16); }
+.capo-value { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--linen); min-width: 58px; text-align: center; }
+.recommended-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(196,154,74,0.13); border: 1px solid rgba(196,154,74,0.26); color: var(--gold); font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.07em; padding: 5px 10px; border-radius: 100px; }
+.edit-modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.modal-btn { padding: 12px; border-radius: 10px; font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-align: center; cursor: pointer; border: none; transition: all 0.2s; }
+.modal-btn.secondary { background: rgba(255,255,255,0.05); color: rgba(234,228,216,0.6); border: 1px solid rgba(255,255,255,0.08); }
+.modal-btn.secondary:hover { background: rgba(255,255,255,0.1); }
+.modal-btn.primary-btn { background: var(--gold); color: var(--brown-deep); }
+.modal-btn.primary-btn:hover { background: var(--gold-light); }
+.modal-btn.primary-btn:active { transform: scale(0.98); }
+.save-feedback { text-align: center; font-family: 'Syne', sans-serif; font-size: 10px; color: var(--gold); margin-top: 8px; letter-spacing: 0.08em; min-height: 16px; transition: opacity 0.3s; }
+
+/* VARIATION PICKER */
+.var-backdrop { display: none; position: fixed; inset: 0; background: rgba(44,31,14,0.55); z-index: 400; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.var-backdrop.open { display: block; }
+.var-picker { position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%) scale(0.94); width: min(480px, calc(100vw - 40px)); max-height: min(520px, calc(100vh - 80px)); overflow-y: auto; background: var(--brown-deep); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 22px; z-index: 401; opacity: 0; pointer-events: none; transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.34,1.26,0.64,1); }
+.var-picker.open { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+.var-picker-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.var-picker-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 400; color: var(--linen); }
+.var-picker-close { background: rgba(255,255,255,0.07); border: none; color: rgba(234,228,216,0.55); font-size: 14px; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
+.var-picker-close:hover { background: rgba(255,255,255,0.15); color: var(--linen); }
+.var-picker-subtitle { font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+.var-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.var-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 10px; text-align: center; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+.var-card:hover { background: rgba(255,255,255,0.1); }
+.var-card-selected { background: var(--gold) !important; border-color: var(--gold) !important; }
+.var-card-index { font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(234,228,216,0.45); margin-bottom: 6px; }
+.var-card-selected .var-card-index { color: rgba(44,31,14,0.55); }
+.var-card-selected .mini-fretboard-dark { border-color: rgba(44,31,14,0.25); }
+.var-card-selected .mini-fretboard-dark::before { background: rgba(44,31,14,0.35); }
+.var-card-selected .mfd-dot { background: rgba(44,31,14,0.7); }
+.var-card-desc { font-family: 'Syne', sans-serif; font-size: 9px; color: rgba(234,228,216,0.55); margin-top: 7px; line-height: 1.4; }
+.var-card-selected .var-card-desc { color: rgba(44,31,14,0.6); }
+@media (max-width: 480px) { .var-cards { grid-template-columns: repeat(2, 1fr); } }
+
+/* COMMUNITY */
+.community-section { background: var(--linen); }
+.community-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; max-width: 1200px; margin: 0 auto; }
+.community-text p { font-size: 15px; line-height: 1.82; color: var(--brown-mid); font-weight: 300; margin-bottom: 24px; }
+.community-text p:last-child { margin-bottom: 0; }
+.versions-list { display: flex; flex-direction: column; gap: 8px; }
+.version-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--white); border: 1px solid rgba(92,61,30,0.1); border-radius: 12px; padding: 13px 16px; transition: all 0.25s; cursor: pointer; }
+.version-row:hover { border-color: rgba(92,61,30,0.2); transform: translateX(4px); box-shadow: 0 4px 16px rgba(44,31,14,0.06); }
+.version-row.active { background: var(--brown-deep); border-color: transparent; }
+.version-name { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; color: var(--brown-deep); margin-bottom: 2px; }
+.version-row.active .version-name { color: var(--linen); }
+.version-meta { font-size: 10px; color: var(--brown-warm); }
+.version-row.active .version-meta { color: rgba(234,228,216,0.42); }
+.version-chords { display: flex; gap: 4px; flex-shrink: 0; }
+.version-chord-tag { background: rgba(92,61,30,0.07); border-radius: 5px; padding: 3px 7px; font-size: 9px; font-family: 'Syne', sans-serif; font-weight: 500; color: var(--brown-mid); }
+.version-row.active .version-chord-tag { background: rgba(234,228,216,0.1); color: rgba(234,228,216,0.62); }
+
+/* CHORD PROGRESSION PLAYER */
+.progression-player {
+  margin-top: 12px; background: var(--white); border: 1px solid rgba(92,61,30,0.12);
+  border-radius: 16px; padding: 20px; display: none; animation: panel-in 0.3s ease;
+}
+.progression-player.pp-visible { display: block; }
+.pp-label { font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+.pp-chords { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.pp-chord { background: var(--linen-light); border: 1px solid rgba(92,61,30,0.1); border-radius: 10px; padding: 10px 14px; font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--brown-deep); min-width: 52px; text-align: center; transition: all 0.2s; position: relative; overflow: hidden; }
+.pp-chord.pp-playing { background: var(--brown-deep); color: var(--linen); border-color: var(--brown-deep); transform: scale(1.06); }
+.pp-chord.pp-playing::after { content: '♪'; position: absolute; top: 2px; right: 4px; font-size: 9px; opacity: 0.6; }
+.pp-controls { display: flex; align-items: center; gap: 12px; }
+.pp-play-btn { display: flex; align-items: center; gap: 8px; background: var(--brown-deep); color: var(--linen); padding: 10px 20px; border-radius: 100px; font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; border: none; cursor: pointer; transition: all 0.2s; }
+.pp-play-btn:hover { background: var(--brown-mid); }
+.pp-play-btn:disabled { opacity: 0.5; cursor: default; }
+.pp-bpm { font-family: 'Syne', sans-serif; font-size: 10px; color: var(--brown-warm); }
+
+/* TUNER */
+.tuner-section { background: var(--white); padding: 80px 48px; }
+.tuner-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+.tuner-visual { display: flex; justify-content: center; }
+.tuner-card { background: var(--linen); border-radius: 26px; padding: 40px 32px; width: 268px; text-align: center; border: 1px solid rgba(92,61,30,0.1); }
+.tuner-needle-track { width: 100%; height: 2px; background: rgba(92,61,30,0.1); border-radius: 2px; position: relative; margin: 20px 0; }
+.tuner-needle { position: absolute; width: 2px; height: 24px; background: var(--gold); top: -12px; left: 50%; transform: translateX(-50%); border-radius: 2px; animation: tuner-sway 3s ease-in-out infinite; }
+@keyframes tuner-sway { 0%,100%{left:55%} 50%{left:50%} }
+.tuner-note { font-family: 'Cormorant Garamond', serif; font-size: 64px; font-weight: 300; color: var(--brown-deep); line-height: 1; letter-spacing: -0.03em; }
+.tuner-note sup { font-size: 24px; vertical-align: super; color: var(--brown-warm); }
+.tuner-status { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-top: 6px; }
+.tuner-strings { display: flex; justify-content: center; gap: 14px; margin-top: 24px; }
+.tuner-string { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.tuner-string-note { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; color: var(--brown-warm); }
+.tuner-string-note.active { color: var(--brown-deep); font-size: 12px; }
+.tuner-string-octave { font-size: 8px; color: rgba(92,61,30,0.35); }
+.tuner-string-octave.active { color: var(--gold); }
+
+/* CTA */
+.cta-section { background: var(--linen); text-align: center; padding: 120px 48px; position: relative; overflow: hidden; }
+.cta-bg-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none; }
+.cta-bg-circle.c1 { width: 480px; height: 480px; border: 1px solid rgba(92,61,30,0.07); }
+.cta-bg-circle.c2 { width: 780px; height: 780px; border: 1px solid rgba(92,61,30,0.04); }
+.cta-bg-circle.c3 { width: 1080px; height: 1080px; border: 1px solid rgba(92,61,30,0.025); }
+.cta-content { position: relative; z-index: 2; max-width: 540px; margin: 0 auto; }
+.cta-h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(44px,6vw,76px); font-weight: 300; line-height: 1.0; letter-spacing: -0.02em; color: var(--brown-deep); margin-bottom: 18px; }
+.cta-h2 em { font-style: italic; color: var(--brown-warm); }
+.cta-sub { font-size: 15px; color: var(--brown-mid); font-weight: 300; line-height: 1.75; margin-bottom: 40px; }
+.app-store-btn { display: inline-flex; align-items: center; gap: 13px; background: var(--brown-deep); color: var(--linen-light); padding: 16px 32px; border-radius: 16px; text-decoration: none; transition: all 0.3s; box-shadow: 0 8px 32px rgba(44,31,14,0.18); }
+.app-store-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(44,31,14,0.26); }
+.app-store-small { font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.1em; opacity: 0.55; text-transform: uppercase; }
+.app-store-large { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 500; }
+
+/* FOOTER */
+footer { background: var(--brown-deep); padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; }
+.footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 400; color: rgba(234,228,216,0.5); }
+.footer-copy { font-family: 'Syne', sans-serif; font-size: 10px; letter-spacing: 0.06em; color: rgba(234,228,216,0.26); }
+.footer-links { display: flex; gap: 22px; list-style: none; flex-wrap: wrap; }
+.footer-links a { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(234,228,216,0.36); text-decoration: none; transition: color 0.2s; }
+.footer-links a:hover { color: rgba(234,228,216,0.72); }
+
+/* PARTNER */
+.partner-section { background: var(--white); }
+.partner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; max-width: 1200px; margin: 0 auto; }
+.partner-text p { font-size: 15px; line-height: 1.82; color: var(--brown-mid); font-weight: 300; margin-bottom: 20px; }
+.partner-text p:last-of-type { margin-bottom: 0; }
+.partner-proof { display: flex; align-items: center; gap: 14px; margin-top: 36px; padding-top: 28px; border-top: 1px solid rgba(92,61,30,0.1); }
+.partner-proof-avatars { display: flex; flex-shrink: 0; }
+.partner-proof-avatar { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--white); background: var(--cream-warm); margin-left: -10px; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; color: var(--brown-warm); flex-shrink: 0; }
+.partner-proof-avatar:first-child { margin-left: 0; }
+.partner-proof-avatar.plus { background: var(--brown-deep); color: rgba(234,228,216,0.7); font-size: 11px; }
+.partner-proof-text { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 400; color: var(--brown-warm); letter-spacing: 0.03em; line-height: 1.6; }
+.partner-proof-text strong { color: var(--brown-deep); font-weight: 500; display: block; margin-bottom: 1px; }
+.partner-form-card { background: var(--brown-deep); border-radius: 20px; padding: 28px; border-top: 2px solid var(--gold); position: sticky; top: 96px; }
+.partner-form-header { margin-bottom: 22px; }
+.partner-form-eyebrow { font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.partner-form-eyebrow::before { content: ''; width: 18px; height: 1px; background: var(--gold); }
+.partner-form-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--linen); line-height: 1.15; }
+.pf-form { display: flex; flex-direction: column; gap: 18px; }
+.pf-field { display: flex; flex-direction: column; gap: 7px; }
+.pf-label { font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(234,228,216,0.4); }
+.pf-input, .pf-textarea { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 300; color: var(--linen); outline: none; transition: border-color 0.2s, background 0.2s; width: 100%; }
+.pf-input::placeholder, .pf-textarea::placeholder { color: rgba(234,228,216,0.22); }
+.pf-input:focus, .pf-textarea:focus { border-color: rgba(196,154,74,0.55); background: rgba(255,255,255,0.09); }
+.pf-textarea { resize: none; height: 88px; line-height: 1.65; }
+.pf-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.pf-pill { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.05em; padding: 8px 15px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: rgba(234,228,216,0.5); cursor: pointer; transition: all 0.18s; user-select: none; }
+.pf-pill:hover { border-color: rgba(255,255,255,0.24); color: rgba(234,228,216,0.85); }
+.pf-pill.pf-active { background: var(--gold); border-color: var(--gold); color: var(--brown-deep); }
+.pf-submit { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--gold); color: var(--brown-deep); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; cursor: pointer; transition: background 0.2s, transform 0.15s; margin-top: 2px; }
+.pf-submit:hover { background: var(--gold-light); }
+.pf-submit:active { transform: scale(0.98); }
+.pf-submit:disabled { opacity: 0.5; cursor: default; transform: none; }
+.pf-error { font-family: 'Syne', sans-serif; font-size: 10px; color: #e07060; letter-spacing: 0.04em; min-height: 14px; margin-top: -4px; }
+.pf-thanks { display: none; flex-direction: column; align-items: center; text-align: center; padding: 36px 12px; gap: 14px; }
+.pf-thanks.pf-thanks-visible { display: flex; animation: fade-up 0.48s ease forwards; }
+.pf-thanks-icon { width: 52px; height: 52px; border-radius: 50%; background: rgba(196,154,74,0.55); border: 1px solid rgba(196,154,74,0.28); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.pf-thanks-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 400; color: var(--linen); line-height: 1.1; }
+.pf-thanks-sub { font-size: 13px; color: rgba(234,228,216,0.48); line-height: 1.75; font-weight: 300; max-width: 260px; }
+
+/* REVEAL */
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.72s ease, transform 0.72s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+
+/* ── MOBILE ── */
+@media (max-width: 900px) {
+  nav { padding: 15px 20px; }
+  .nav-links { display: none; }
+  .nav-hamburger { display: flex; }
+  .hero { grid-template-columns: 1fr; padding: 86px 20px 52px; text-align: center; gap: 0; min-height: auto; }
+  .hero-eyebrow { justify-content: center; }
+  .hero-sub { margin: 0 auto 32px; max-width: 100%; font-size: 15px; }
+  .hero-actions { justify-content: center; }
+  .hero-visual { display: none; }
+  .hero-bg-strings .string-line { display: none; }
+  .stats-bar { padding: 18px 20px; }
+  .stat-item::after { display: none; }
+  .stat-num { font-size: 30px; }
+  section { padding: 64px 20px; }
+  .how-grid { grid-template-columns: 1fr; gap: 40px; }
+  /* Upload cards: no side panel on mobile, use bottom sheet */
+  .upload-preview-panel { display: none !important; }
+  /* Features: no inline expand on mobile, use bottom sheet */
+  .feature-preview-row { display: none !important; }
+  .edit-grid { grid-template-columns: 1fr; gap: 40px; }
+  .community-grid { grid-template-columns: 1fr; gap: 40px; }
+  .tuner-section { padding: 60px 20px; }
+  .tuner-inner { grid-template-columns: 1fr; gap: 40px; }
+  .tuner-visual { order: -1; }
+  .tuner-card { width: 100%; max-width: 300px; }
+  .cta-section { padding: 88px 20px; }
+  .cta-bg-circle.c1 { width: 280px; height: 280px; }
+  .cta-bg-circle.c2 { width: 480px; height: 480px; }
+  .cta-bg-circle.c3 { width: 680px; height: 680px; }
+  footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; gap: 14px; }
+  .features-grid { grid-template-columns: 1fr; }
+  .feature-cell.wide { grid-column: span 1; }
+  .feature-cell { padding: 28px 22px; }
+  .chord-picker-grid { grid-template-columns: repeat(4,1fr); }
+  .partner-grid { grid-template-columns: 1fr; gap: 40px; }
+  .partner-form-card { position: static; }
+}
+@media (max-width: 640px) {
+  .hero-h1 { font-size: clamp(40px,11vw,60px); }
+  .section-h2 { font-size: clamp(32px,9vw,48px); }
+  .app-store-btn { padding: 14px 24px; }
+  .stat-item { min-width: 80px; padding: 6px 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- BOTTOM SHEET (shared, mobile) -->
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="bottom-sheet" id="bottomSheet">
+  <div class="sheet-handle-bar"><div class="sheet-handle"></div></div>
+  <div class="sheet-inner" id="sheetInner">
+    <div class="sheet-eyebrow" id="sheetEyebrow"></div>
+    <div class="sheet-title" id="sheetTitle"></div>
+    <div class="sheet-body" id="sheetBody"></div>
+    <div class="sheet-phone-wrap" id="sheetPhoneWrap"></div>
+  </div>
+</div>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-close" id="menuClose">✕</div>
+  <a href="#how" onclick="closeMobileMenu()">How It Works</a>
+  <a href="#features" onclick="closeMobileMenu()">Features</a>
+  <a href="#community" onclick="closeMobileMenu()">Community</a>
+  <a href="#partner" onclick="closeMobileMenu()">Partner</a>
+  <a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181" class="mobile-dl-btn">Download Now</a>
+</div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <a href="#" class="nav-logo">
+    <img class="nav-logo-icon" src="Strum Logo.png" alt="Strum logo" width="36" height="36">
+    <span class="nav-logo-text">Strum</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#community">Community</a></li>
+    <li><a href="#partner">Partner</a></li>
+    <li><a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181" class="nav-cta">Download Now</a></li>
+  </ul>
+  <div class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-strings">
+    <div class="string-line"></div><div class="string-line"></div><div class="string-line"></div>
+    <div class="string-line"></div><div class="string-line"></div><div class="string-line"></div>
+  </div>
+  <div class="hero-text">
+    <div class="hero-eyebrow">For Every Guitarist</div>
+    <h1 class="hero-h1">Every song<br>you love,<br><em>ready to play.</em></h1>
+    <p class="hero-sub">Strum turns any song into guitar chords — instantly. AI-powered chord detection, over a million songs, and a community that keeps every chart alive.</p>
+    <div class="hero-actions">
+      <a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181" class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Download Now
+      </a>
+      <a href="#how" class="btn-ghost">See how it works <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="phone-float-card float-card-1">
+      <div class="float-card-label">Strumming Patterns</div>
+      <div class="float-card-sub" style="margin-bottom:4px">Pattern 1 · 96 BPM</div>
+      <div class="strum-arrows">
+        <div class="arrow-beat"><span>↓</span><small>1</small></div>
+        <div class="arrow-beat"><span style="opacity:.16">—</span><small>&</small></div>
+        <div class="arrow-beat"><span>↓</span><small>2</small></div>
+        <div class="arrow-beat"><span style="opacity:.16">—</span><small>&</small></div>
+        <div class="arrow-beat"><span>↑</span><small>3</small></div>
+        <div class="arrow-beat"><span>↓</span><small>&</small></div>
+        <div class="arrow-beat"><span>↑</span><small>4</small></div>
+        <div class="arrow-beat"><span>↓</span><small>&</small></div>
+      </div>
+      <div class="float-card-sub" style="margin-top:8px;margin-bottom:4px">Pattern 2 · 96 BPM</div>
+      <div class="strum-arrows">
+        <div class="arrow-beat"><span>↓</span><small>1</small></div>
+        <div class="arrow-beat"><span style="opacity:.16">—</span><small>&</small></div>
+        <div class="arrow-beat"><span>↑</span><small>2</small></div>
+        <div class="arrow-beat"><span>↓</span><small>&</small></div>
+        <div class="arrow-beat"><span>↑</span><small>3</small></div>
+        <div class="arrow-beat"><span style="opacity:.16">—</span><small>&</small></div>
+        <div class="arrow-beat"><span>↓</span><small>4</small></div>
+        <div class="arrow-beat"><span>↑</span><small>&</small></div>
+      </div>
+    </div>
+    <img class="hero-screenshot" src="AppScreenshots/sc_phone.png" alt="Strum app">
+    <div class="phone-float-card float-card-2">
+      <div class="float-card-label">Tuner</div>
+      <div class="float-card-value">E<sup style="font-size:10px;color:var(--brown-warm)">4</sup></div>
+      <div class="float-card-sub" style="color:var(--gold)">In tune ✓</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar reveal">
+  <div class="stat-item"><div class="stat-num">1M<sup>+</sup></div><div class="stat-label">Songs Available</div></div>
+  <div class="stat-item"><div class="stat-num">4.7</div><div class="stat-label">US App Store Rating</div></div>
+  <div class="stat-item"><div class="stat-num">5</div><div class="stat-label">Upload Methods</div></div>
+  <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">Community Versions</div></div>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track">
+    <span class="marquee-item">Layla <span class="marquee-dot">·</span></span><span class="marquee-item">Wonderwall <span class="marquee-dot">·</span></span><span class="marquee-item">Blackbird <span class="marquee-dot">·</span></span><span class="marquee-item">Hotel California <span class="marquee-dot">·</span></span><span class="marquee-item">Wake Me Up <span class="marquee-dot">·</span></span><span class="marquee-item">Sweet Home Chicago <span class="marquee-dot">·</span></span><span class="marquee-item">YUKON <span class="marquee-dot">·</span></span><span class="marquee-item">Be By You <span class="marquee-dot">·</span></span><span class="marquee-item">The Fate of Ophelia <span class="marquee-dot">·</span></span><span class="marquee-item">Let Me Love You Baby <span class="marquee-dot">·</span></span>
+    <span class="marquee-item">Layla <span class="marquee-dot">·</span></span><span class="marquee-item">Wonderwall <span class="marquee-dot">·</span></span><span class="marquee-item">Blackbird <span class="marquee-dot">·</span></span><span class="marquee-item">Hotel California <span class="marquee-dot">·</span></span><span class="marquee-item">Wake Me Up <span class="marquee-dot">·</span></span><span class="marquee-item">Sweet Home Chicago <span class="marquee-dot">·</span></span><span class="marquee-item">YUKON <span class="marquee-dot">·</span></span><span class="marquee-item">Be By You <span class="marquee-dot">·</span></span><span class="marquee-item">The Fate of Ophelia <span class="marquee-dot">·</span></span><span class="marquee-item">Let Me Love You Baby <span class="marquee-dot">·</span></span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="how-grid">
+    <div>
+      <div class="section-eyebrow reveal">How It Works</div>
+      <h2 class="section-h2 reveal reveal-delay-1">Three steps to<br><em>any song.</em></h2>
+      <div class="how-steps">
+        <div class="how-step reveal reveal-delay-1"><div class="step-num">1</div><div class="step-content"><div class="step-title">Find your song</div><div class="step-desc">Search over a million songs, paste a YouTube link, upload your own audio, record live, or use Shazam to identify a song playing near you.</div></div></div>
+        <div class="how-step reveal reveal-delay-2"><div class="step-num">2</div><div class="step-content"><div class="step-title">AI maps every chord</div><div class="step-desc">Our AI analyzes the audio and generates accurate chord progressions with fingering diagrams, capo recommendations, and strumming patterns — in seconds.</div></div></div>
+        <div class="how-step reveal reveal-delay-3"><div class="step-num">3</div><div class="step-content"><div class="step-title">Play at your pace</div><div class="step-desc">Follow along with synchronized lyrics and chords. Slow playback, adjust the capo, edit any chord, or switch to a community version — it's entirely your call.</div></div></div>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE UPLOAD CARDS -->
+    <div class="how-visual reveal reveal-delay-2">
+      <div class="upload-interactive">
+        <div class="upload-grid" id="uploadGrid">
+          <div class="upload-card featured" data-upload="ai" onclick="handleUploadCard(this,'ai')">
+            <span class="upload-card-icon">⚡</span>
+            <div class="upload-card-title">AI Chord Detection</div>
+            <div class="upload-card-desc">Upload any audio — AI identifies every chord instantly</div>
+          </div>
+          <div class="upload-card" data-upload="yt" onclick="handleUploadCard(this,'yt')">
+            <span class="upload-card-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo.png" alt="YouTube" style="height:18px;width:auto;display:inline-block;vertical-align:middle;"></span>
+            <div class="upload-card-title">YouTube</div>
+            <div class="upload-card-desc">Paste any video link</div>
+          </div>
+          <div class="upload-card" data-upload="rec" onclick="handleUploadCard(this,'rec')">
+            <span class="upload-card-icon">🎤</span>
+            <div class="upload-card-title">Record</div>
+            <div class="upload-card-desc">Live mic recording</div>
+          </div>
+          <div class="upload-card" data-upload="shz" onclick="handleUploadCard(this,'shz')">
+            <span class="upload-card-icon"><img src="https://help.apple.com/assets/68D47763801F6418E40C113A/68D4776C11019F76430CA5B1/en_US/16a54e583a9dcfeb4cfa917b78806e46.png" alt="Shazam" style="height:24px;width:auto;display:inline-block;vertical-align:middle;"></span>
+            <div class="upload-card-title">Shazam</div>
+            <div class="upload-card-desc">Identify &amp; get chords instantly</div>
+          </div>
+          <div class="upload-card" data-upload="fil" onclick="handleUploadCard(this,'fil')">
+            <span class="upload-card-icon">📁</span>
+            <div class="upload-card-title">Files</div>
+            <div class="upload-card-desc">MP3, WAV, M4A, and other files recognized by Strum</div>
+          </div>
+          <!-- Desktop preview panel injected here -->
+          <div class="upload-preview-panel" id="uploadPreviewPanel">
+            <div class="panel-screenshot" id="panelPhoneScreen"></div>
+            <div class="panel-text">
+              <h4 id="panelTitle"></h4>
+              <p id="panelDesc"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div style="max-width:1200px;margin:0 auto;">
+    <div class="features-intro">
+      <div class="section-eyebrow reveal">Features</div>
+      <h2 class="section-h2 reveal reveal-delay-1">Everything a guitarist<br><em>actually needs.</em></h2>
+      <p class="reveal reveal-delay-2">Not a lesson app. Not a tab site. Strum bridges the gap between the music you hear and the music you play — with full control at every step.</p>
+    </div>
+    <div class="features-grid reveal" id="featuresGrid">
+      <div class="feature-cell dark wide" data-feat="ai" onclick="handleFeatureClick(this,'ai')">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">Smart Chord Recognition</div>
+        <div class="feature-desc">Advanced AI analyzes audio waveforms to identify chord progressions with the accuracy of a trained musician — not keyword lookup. Every change, every voicing, every passing chord.</div>
+        <span class="feature-tag">AI-Powered</span>
+      </div>
+      <div class="feature-cell" data-feat="strum" onclick="handleFeatureClick(this,'strum')">
+        <span class="feature-icon">♩</span>
+        <div class="feature-title">Strumming Patterns</div>
+        <div class="feature-desc">Visual down/up stroke guides with BPM control and audio playback. No notation required — just follow the arrows.</div>
+      </div>
+      <!-- Feature preview row 1 (after row 1) -->
+      <div class="feature-preview-row" id="fpr1"><div class="feature-preview-inner"><div class="fp-screenshot" id="fpScreen1"></div><div class="fp-text"><h4 id="fpTitle1"></h4><p id="fpDesc1"></p><div class="fp-close" onclick="closeFeaturePreview(1)">✕ Close</div></div></div></div>
+      <div class="feature-cell" data-feat="edit" onclick="handleFeatureClick(this,'edit')">
+        <span class="feature-icon">✏️</span>
+        <div class="feature-title">Edit Any Chord</div>
+        <div class="feature-desc">Tap any chord in the chart to replace it. Search by name, browse fingering diagrams, choose your voicing, and save — full control over every bar.</div>
+        <span class="feature-tag">Full Control</span>
+      </div>
+      <div class="feature-cell" data-feat="capo" onclick="handleFeatureClick(this,'capo')">
+        <span class="feature-icon">🎸</span>
+        <div class="feature-title">Smart Capo Settings</div>
+        <div class="feature-desc">Strum recommends the optimal capo position and retransposes every chord automatically. Adjust with ± and preview the full chord map before saving.</div>
+      </div>
+      <div class="feature-cell" data-feat="community" onclick="handleFeatureClick(this,'community')">
+        <span class="feature-icon">👥</span>
+        <div class="feature-title">Community Versions</div>
+        <div class="feature-desc">Every song has multiple chord arrangements contributed by real players — different chords, different capo positions, different takes on the same song.</div>
+        <span class="feature-tag">Community</span>
+      </div>
+      <!-- Feature preview row 2 (after row 2) -->
+      <div class="feature-preview-row" id="fpr2"><div class="feature-preview-inner"><div class="fp-screenshot" id="fpScreen2"></div><div class="fp-text"><h4 id="fpTitle2"></h4><p id="fpDesc2"></p><div class="fp-close" onclick="closeFeaturePreview(2)">✕ Close</div></div></div></div>
+      <div class="feature-cell" data-feat="library" onclick="handleFeatureClick(this,'library')">
+        <span class="feature-icon">🎵</span>
+        <div class="feature-title">1M+ Song Library</div>
+        <div class="feature-desc">From Avicii to Stevie Ray Vaughan — pre-built chord charts across every genre, instantly accessible.</div>
+      </div>
+      <div class="feature-cell" data-feat="tuner" onclick="handleFeatureClick(this,'tuner')">
+        <span class="feature-icon">◎</span>
+        <div class="feature-title">Built-In Tuner</div>
+        <div class="feature-desc">Chromatic tuner with real-time note detection. Multiple presets from Standard to Drop D — no app switching needed.</div>
+      </div>
+      <div class="feature-cell" data-feat="spotify" onclick="handleFeatureClick(this,'spotify')">
+        <span class="feature-icon" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><img src="https://upload.wikimedia.org/wikipedia/commons/7/71/Spotify.png" alt="Spotify" style="height:22px;width:auto;"><img src="https://1000logos.net/wp-content/uploads/2023/01/Apple-Music-Logo.png" alt="Apple Music" style="height:22px;width:auto;"></span>
+        <div class="feature-title">Spotify &amp; Apple Music</div>
+        <div class="feature-desc">Connect your streaming account — Strum personalizes your chord library around the music you already love.</div>
+        <span class="feature-tag">Personalized</span>
+      </div>
+      <!-- Feature preview row 3 (after row 3) -->
+      <div class="feature-preview-row" id="fpr3"><div class="feature-preview-inner"><div class="fp-screenshot" id="fpScreen3"></div><div class="fp-text"><h4 id="fpTitle3"></h4><p id="fpDesc3"></p><div class="fp-close" onclick="closeFeaturePreview(3)">✕ Close</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EDIT + CAPO (interactive) -->
+<section class="edit-section" id="edit">
+  <div class="edit-grid">
+    <div class="edit-text">
+      <div class="section-eyebrow reveal">Your Chords, Your Way</div>
+      <h2 class="section-h2 reveal reveal-delay-1">Edit chords.<br><em>Set your capo.</em><br>Own the song.</h2>
+      <p class="reveal reveal-delay-2">AI gets you close. But every player has their own style, key, and way of hearing a song. Strum gives you full control to make any chart your own.</p>
+      <div class="edit-features reveal reveal-delay-3">
+        <div class="edit-feature-row"><div class="edit-feature-dot"></div><div><div class="edit-feature-title">Tap to Edit Any Chord</div><div class="edit-feature-desc">Enter edit mode, tap any chord to replace it. Search by name or browse the full chord library with fingering diagrams.</div></div></div>
+        <div class="edit-feature-row"><div class="edit-feature-dot"></div><div><div class="edit-feature-title">Drag to Reorder</div><div class="edit-feature-desc">Rearrange chord positions with a long press and drag — no complicated menus.</div></div></div>
+        <div class="edit-feature-row"><div class="edit-feature-dot"></div><div><div class="edit-feature-title">Smart Capo Settings</div><div class="edit-feature-desc">Strum recommends the optimal capo position and retransposes all chords. Adjust with ± controls and preview before saving.</div></div></div>
+        <div class="edit-feature-row"><div class="edit-feature-dot"></div><div><div class="edit-feature-title">Chord Variations</div><div class="edit-feature-desc">Multiple voicing options for every chord — choose the shape that fits your hand and your sound.</div></div></div>
+      </div>
+    </div>
+
+    <div class="reveal reveal-delay-2">
+      <div class="edit-interactive">
+        <div class="edit-modal-title">Edit Chord</div>
+        <!-- Large fretboard display -->
+        <div class="large-fretboard-wrap">
+          <div class="lfb-header">
+            <div><div class="lfb-chord-name" id="lfbName">G#m</div><div class="lfb-chord-desc" id="lfbDesc">Barre chord, 4th fret</div></div>
+          </div>
+          <div class="lfb-board" id="lfbBoard"></div>
+        </div>
+        <!-- Chord picker -->
+        <div class="chord-picker-grid" id="chordPickerGrid"></div>
+        <!-- Capo controls -->
+        <div class="capo-card">
+          <div class="capo-header">
+            <div class="capo-label-text">Capo Settings</div>
+            <div class="capo-controls">
+              <button class="capo-btn" onclick="changeCapo(-1)">−</button>
+              <div class="capo-value" id="capoDisplay">6th fret</div>
+              <button class="capo-btn" onclick="changeCapo(1)">+</button>
+            </div>
+          </div>
+          <div class="recommended-badge" id="recoBadge">★ &nbsp;Recommended — 6th fret</div>
+        </div>
+        <div class="edit-modal-btns">
+          <button class="modal-btn secondary" onclick="selectVariation()">Select Variation</button>
+          <button class="modal-btn primary-btn" onclick="saveAndPlay()">Save</button>
+        </div>
+        <div class="save-feedback" id="saveFeedback"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section class="community-section" id="community">
+  <div class="community-grid">
+    <div class="community-text">
+      <div class="section-eyebrow reveal">Community Library</div>
+      <h2 class="section-h2 reveal reveal-delay-1">Every song,<br><em>countless ways</em><br>to play it.</h2>
+      <p class="reveal reveal-delay-2">Every song on Strum has multiple chord versions contributed by real players. Strum's AI generates the official arrangement, and the community adds their own — different chords, different capo positions, different approaches to the same song.</p>
+      <p class="reveal reveal-delay-3">Prefer open chords to barre chords? Want the most accurate original key? The community has you covered.</p>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div style="font-family:'Syne',sans-serif;font-size:10px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--brown-warm);margin-bottom:13px;">Layla — Eric Clapton</div>
+      <div class="versions-list">
+        <div class="version-row active" id="strumAiRow" onclick="toggleProgression()">
+          <div class="version-info"><div class="version-name">Strum AI Version</div><div class="version-meta">Official · Capo 6th fret · Tap to hear</div></div>
+          <div class="version-chords"><span class="version-chord-tag">Am</span><span class="version-chord-tag">G</span><span class="version-chord-tag">F</span><span class="version-chord-tag">C</span></div>
+        </div>
+        <!-- Chord progression player -->
+        <div class="progression-player" id="progressionPlayer">
+          <div class="pp-label">Chord Progression — Layla (Intro)</div>
+          <div class="pp-chords" id="ppChords">
+            <div class="pp-chord" data-chord="Am">Am</div>
+            <div class="pp-chord" data-chord="G">G</div>
+            <div class="pp-chord" data-chord="F">F</div>
+            <div class="pp-chord" data-chord="C">C</div>
+          </div>
+          <div class="pp-controls">
+            <button class="pp-play-btn" id="ppPlayBtn" onclick="togglePlay()">
+              <span id="ppPlayIcon">▶</span> <span id="ppPlayLabel">Play progression</span>
+            </button>
+            <div class="pp-bpm">120 BPM · Capo 6</div>
+          </div>
+        </div>
+        <div class="version-row" onclick="openVersionSheet('Beginner Friendly','jsclapton92 · No capo','Am, G, F — open chord version, great for beginners.')">
+          <div class="version-info"><div class="version-name">Beginner Friendly</div><div class="version-meta">jsclapton92 · No capo</div></div>
+          <div class="version-chords"><span class="version-chord-tag">Am</span><span class="version-chord-tag">G</span><span class="version-chord-tag">F</span></div>
+        </div>
+        <div class="version-row" onclick="openVersionSheet('Original Key','guitar_theorist · No capo','Dm, Bb, C — closest to Eric Clapton\'s original recording, no capo needed.')">
+          <div class="version-info"><div class="version-name">Original Key</div><div class="version-meta">guitar_theorist · No capo</div></div>
+          <div class="version-chords"><span class="version-chord-tag">Dm</span><span class="version-chord-tag">Bb</span><span class="version-chord-tag">C</span></div>
+        </div>
+        <div class="version-row" onclick="openVersionSheet('Capo 5 Arrangement','fingerpick_folk · Capo 5th fret','A, F, Am — intermediate level, comfortable open shapes with capo 5.')">
+          <div class="version-info"><div class="version-name">Capo 5 Arrangement</div><div class="version-meta">fingerpick_folk · Capo 5th fret</div></div>
+          <div class="version-chords"><span class="version-chord-tag">A</span><span class="version-chord-tag">F</span><span class="version-chord-tag">Am</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TUNER -->
+<section class="tuner-section">
+  <div class="tuner-inner">
+    <div>
+      <div class="section-eyebrow reveal">Built-In Tuner</div>
+      <h2 class="section-h2 reveal reveal-delay-1" style="font-size:clamp(32px,3.5vw,52px)">Always in tune.<br><em>Always ready.</em></h2>
+      <p class="reveal reveal-delay-2" style="font-size:14px;line-height:1.82;color:var(--brown-mid);font-weight:300;max-width:360px;margin-top:12px;margin-bottom:26px;">A chromatic tuner built right into the app. No switching apps, no ads, no noise. Pluck a string — Strum tells you exactly where you are.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;" class="reveal reveal-delay-3">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--brown-mid);font-weight:300;"><span style="color:var(--gold)">✓</span> Standard, Drop D, Open G, and more tuning presets</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--brown-mid);font-weight:300;"><span style="color:var(--gold)">✓</span> Real-time frequency detection via microphone</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--brown-mid);font-weight:300;"><span style="color:var(--gold)">✓</span> Clear sharp / flat guidance on screen</div>
+      </div>
+    </div>
+    <div class="tuner-visual reveal reveal-delay-2">
+      <div class="tuner-card">
+        <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:var(--brown-warm);margin-bottom:6px;">Standard Tuning</div>
+        <div class="tuner-note">E<sup>4</sup></div>
+        <div class="tuner-needle-track"><div class="tuner-needle"></div></div>
+        <div class="tuner-status">In tune ✓</div>
+        <div class="tuner-strings">
+          <div class="tuner-string"><div class="tuner-string-note">E</div><div class="tuner-string-octave">2</div></div>
+          <div class="tuner-string"><div class="tuner-string-note">A</div><div class="tuner-string-octave">2</div></div>
+          <div class="tuner-string"><div class="tuner-string-note">D</div><div class="tuner-string-octave">3</div></div>
+          <div class="tuner-string"><div class="tuner-string-note">G</div><div class="tuner-string-octave">3</div></div>
+          <div class="tuner-string"><div class="tuner-string-note">B</div><div class="tuner-string-octave">3</div></div>
+          <div class="tuner-string"><div class="tuner-string-note active">E</div><div class="tuner-string-octave active">4</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PARTNER -->
+<section class="partner-section" id="partner">
+  <div class="partner-grid" style="max-width:1200px;margin:0 auto;">
+    <div class="partner-text reveal">
+      <div class="section-eyebrow">Creators &amp; Partners</div>
+      <h2 class="section-h2">Grow with <em>Strum.</em></h2>
+      <p>Strum is the #1 guitar learning app on the App Store — with over a million songs, a 4.7-star rating, and a community that shows up every single day to learn, share, and play. When creators partner with us, they tap into that audience directly. Guitarists who are actively learning, genuinely engaged, and hungry for content that meets them where they are.</p>
+      <p>We've partnered with hundreds of creators across TikTok, YouTube, and Instagram — from bedroom guitarists with a few thousand followers to educators with millions. Every partnership is real: revenue sharing, early access to features before they launch, co-created content, and a direct line to the team building the app. No middlemen, no templated deals.</p>
+      <p style="font-size:14px;color:var(--brown-warm);font-style:italic;">"Strum gave me a reason to post again. My tutorial content tripled in reach within the first month."</p>
+      <div class="partner-proof">
+        <div class="partner-proof-avatars">
+          <div class="partner-proof-avatar">JL</div>
+          <div class="partner-proof-avatar">MR</div>
+          <div class="partner-proof-avatar">AK</div>
+          <div class="partner-proof-avatar plus">+</div>
+        </div>
+        <div class="partner-proof-text">
+          <strong>300+ active creator partners</strong>
+          TikTok · YouTube · Instagram
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal reveal-delay-1">
+      <div class="partner-form-card">
+        <div id="pfForm">
+          <div class="partner-form-header">
+            <div class="partner-form-eyebrow">Apply to Partner</div>
+            <div class="partner-form-title">Tell us about yourself</div>
+          </div>
+          <form class="pf-form" id="partnerForm" novalidate>
+            <div class="pf-field">
+              <label class="pf-label">Your Name</label>
+              <input class="pf-input" type="text" name="name" placeholder="First and last name" autocomplete="name">
+            </div>
+            <div class="pf-field">
+              <label class="pf-label">Email Address</label>
+              <input class="pf-input" type="email" name="email" placeholder="you@example.com" autocomplete="email">
+            </div>
+            <div class="pf-field">
+              <label class="pf-label">TikTok or Instagram</label>
+              <input class="pf-input" type="text" name="username" placeholder="@yourhandle">
+            </div>
+            <div class="pf-field">
+              <label class="pf-label">I am a…</label>
+              <div class="pf-pills" id="pfPills">
+                <div class="pf-pill pf-active" data-val="Content Creator">Content Creator</div>
+                <div class="pf-pill" data-val="UGC Creator">UGC Creator</div>
+                <div class="pf-pill" data-val="Influencer">Influencer</div>
+                <div class="pf-pill" data-val="Other">Other</div>
+              </div>
+              <input type="hidden" name="type" id="pfType" value="Content Creator">
+            </div>
+            <div class="pf-field">
+              <label class="pf-label">Anything to add? <span style="opacity:0.38;font-size:8px;text-transform:none;letter-spacing:0.02em;">(optional)</span></label>
+              <textarea class="pf-textarea" name="message" placeholder="Links, follower count, what you'd like to create with Strum…"></textarea>
+            </div>
+            <div class="pf-error" id="pfError"></div>
+            <button class="pf-submit" type="submit" id="pfSubmit">Submit Application</button>
+          </form>
+        </div>
+        <div class="pf-thanks" id="pfThanks">
+          <div class="pf-thanks-icon">♪</div>
+          <div class="pf-thanks-title">You're on our radar.</div>
+          <div class="pf-thanks-sub">Our partnerships team will be in touch within 2–3 business days. In the meantime, keep playing.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-bg-circle c1"></div><div class="cta-bg-circle c2"></div><div class="cta-bg-circle c3"></div>
+  <div class="cta-content reveal">
+    <h2 class="cta-h2">Your guitar<br>is <em>waiting.</em></h2>
+    <p class="cta-sub">Free to download. No music theory required. Every song you love, one tap away.</p>
+    <a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181" class="app-store-btn">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#EAE4D8"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      <div><div class="app-store-small">Download on the</div><div class="app-store-large">App Store</div></div>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Strum</div>
+  <ul class="footer-links"><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li><li><a href="#">Support</a></li><li><a href="https://apps.apple.com/us/app/strum-play-guitar/id6749384181">App Store</a></li></ul>
+  <div class="footer-copy">© 2026 Strum. All rights reserved.</div>
+</footer>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────
+
+const UPLOAD_DATA = {
+  ai: {
+    title: 'AI Chord Detection',
+    desc: 'Upload any audio file — MP3, WAV, or M4A — and our AI maps every chord in seconds. Accurate, instant, no music theory needed.',
+    screen: `<img src="AppScreenshots/sc_upload.png" alt="AI Chord Detection" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">`
+  },
+  yt: {
+    title: 'YouTube',
+    desc: 'Paste any YouTube link — music video, live performance, cover, anything. Strum pulls the audio and generates chords instantly.',
+    screen: `<img src="AppScreenshots/sc_youtube.png" alt="YouTube" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">`
+  },
+  rec: {
+    title: 'Record',
+    desc: 'Tap record and play — Strum listens through your mic and generates chords from your live recording. Perfect for jamming out something new.',
+    screen: `<img src="AppScreenshots/sc_record.png" alt="Record" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">`
+  },
+  shz: {
+    title: 'Shazam',
+    desc: 'Hear a song you love? Tap Shazam, let it identify the track, and Strum generates the chords automatically. From ear to guitar in one tap.',
+    screen: `<img src="AppScreenshots/sc_shazam.png" alt="Shazam" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">`
+  },
+  fil: {
+    title: 'Files',
+    desc: 'Upload MP3, WAV, or M4A files from your device. Works with anything in your music library, voice memos, or downloaded tracks.',
+    screen: `<img src="AppScreenshots/sc_files.png" alt="Files" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">`
+  }
+};
+
+const FEATURE_DATA = {
+  ai:        { title:'Smart Chord Recognition', desc:'Our AI analyzes the exact audio waveform — not metadata — to detect every chord change, voicing, and progression in the song.', screen:`<img src="AppScreenshots/sc_ai.png" alt="AI Chord Recognition" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
+  strum:     { title:'Strumming Patterns', desc:'Visual down/up stroke diagrams at your chosen BPM, with audio playback so you can hear the rhythm before you play it.', screen:`<img src="AppScreenshots/sc_strumming.gif" alt="Strumming Patterns" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
+  edit:      { title:'Edit Any Chord', desc:'Tap any chord to open the picker. Browse the full library with real fretboard diagrams, search by name, and save with one tap.', screen:`<img src="AppScreenshots/sc_chvar.png" alt="Edit Chord" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
+  capo:      { title:'Smart Capo Settings', desc:'Strum recommends the best capo position for playability and retransposes all chords in real time. Adjust with + / − and preview before committing.', screen:`<img src="AppScreenshots/sc_capo.png" alt="Capo Settings" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
+  community: { title:'Community Versions', desc:'Browse chord arrangements from real players — different capo positions, different chord voicings, different approaches to the same song.', screen:`<img src="AppScreenshots/sc_community.png" alt="Community Versions" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
+  library:   { title:'1M+ Song Library', desc:'Search from over a million songs with pre-built chord charts — browse by artist, genre, or trending charts. Every genre covered.', screen:`<img src="AppScreenshots/sc_search.png" alt="Song Library" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
+  tuner:     { title:'Built-In Tuner', desc:'A chromatic tuner built into the app — no switching needed. Real-time pitch detection, string selector, and multiple tuning presets.', screen:`<img src="AppScreenshots/sc_tuner.png" alt="Tuner" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` },
+  spotify:   { title:'Spotify & Apple Music', desc:'Connect your streaming account so Strum knows what you already listen to and surfaces chord charts for your top songs first.', screen:`<img src="AppScreenshots/sc_music.png" alt="Spotify & Apple Music" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top;">` }
+};
+
+const CHORD_DATA = {
+  // String numbering: 1 = low E (leftmost), 6 = high e (rightmost)
+  // fingers: [relativeFret, string] — relative to startFret (default 1)
+  // Open chord shapes (has open:[]) are always valid regardless of capo position
+  // Barre chords (no open strings) only valid when startFret > capoFret
+  'C': { variations: [
+    { fingers:[[3,2],[2,3],[1,5]], open:[4,6], muted:[1], desc:'Open C major (x32010)', freq:[130.81,196.00,261.63,329.63] },
+    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:3, desc:'Barre C major (3rd fret)', freq:[130.81,196.00,261.63,329.63] },
+    { fingers:[[3,2],[3,5]], open:[4,6], muted:[1], desc:'Csus2 open voicing', freq:[130.81,196.00,261.63,329.63] }
+  ] },
+  'G': { variations: [
+    { fingers:[[3,1],[2,2],[3,6]], open:[3,4,5], muted:[], desc:'Open G major (320003)', freq:[98.00,146.83,196.00,246.94] },
+    { fingers:[[3,1],[2,2],[3,5],[3,6]], open:[3,4], muted:[], desc:'Open G alt voicing (320033)', freq:[98.00,146.83,196.00,246.94] },
+    { fingers:[[1,1],[3,2],[3,3],[2,4],[1,5],[1,6]], open:[], muted:[], startFret:3, desc:'Barre G major (3rd fret)', freq:[98.00,146.83,196.00,246.94] }
+  ] },
+  'Am': { variations: [
+    { fingers:[[2,3],[2,4],[1,5]], open:[2,6], muted:[1], desc:'Open A minor (x02210)', freq:[110.00,164.81,220.00,261.63] },
+    { fingers:[[1,1],[3,2],[3,3],[1,4],[1,5],[1,6]], open:[], muted:[], startFret:5, desc:'Barre A minor (5th fret)', freq:[110.00,164.81,220.00,261.63] },
+    { fingers:[[2,3],[1,5]], open:[2,4,6], muted:[1], desc:'Am7 open voicing (x02010)', freq:[110.00,164.81,220.00,261.63] }
+  ] },
+  'F': { variations: [
+    { fingers:[[1,1],[3,2],[3,3],[2,4],[1,5],[1,6]], open:[], muted:[], desc:'Barre F major (1st fret)', freq:[87.31,130.81,174.61,220.00] },
+    { fingers:[[3,3],[2,4],[1,5],[1,6]], open:[], muted:[1,2], desc:'F major partial barre (xx3211)', freq:[87.31,130.81,174.61,220.00] },
+    { fingers:[[3,2],[3,3],[2,4],[1,5]], open:[6], muted:[1], desc:'Fmaj7 open voicing (x33210)', freq:[87.31,130.81,174.61,220.00] }
+  ] },
+  'D': { variations: [
+    { fingers:[[2,4],[3,5],[2,6]], open:[3], muted:[1,2], desc:'Open D major (xx0232)', freq:[146.83,220.00,293.66,369.99] },
+    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:5, desc:'Barre D major (5th fret)', freq:[146.83,220.00,293.66,369.99] },
+    { fingers:[[2,4],[3,5]], open:[3,6], muted:[1,2], desc:'Dsus2 open voicing (xx0230)', freq:[146.83,220.00,293.66,369.99] }
+  ] },
+  'E': { variations: [
+    { fingers:[[2,2],[2,3],[1,4]], open:[1,5,6], muted:[], desc:'Open E major (022100)', freq:[82.41,123.47,164.81,207.65] },
+    { fingers:[[2,2],[1,4]], open:[1,3,5,6], muted:[], desc:'E7 open voicing (020100)', freq:[82.41,123.47,164.81,207.65] },
+    { fingers:[[2,2],[4,3],[1,4]], open:[1,5,6], muted:[], desc:'Esus4 open voicing (022200)', freq:[82.41,123.47,164.81,207.65] }
+  ] },
+  'A': { variations: [
+    { fingers:[[2,3],[2,4],[2,5]], open:[2,6], muted:[1], desc:'Open A major (x02220)', freq:[110.00,164.81,220.00,277.18] },
+    { fingers:[[1,1],[3,2],[3,3],[2,4],[1,5],[1,6]], open:[], muted:[], startFret:5, desc:'Barre A major (5th fret)', freq:[110.00,164.81,220.00,277.18] },
+    { fingers:[[2,3],[2,5]], open:[2,4,6], muted:[1], desc:'A7 open voicing (x02020)', freq:[110.00,164.81,220.00,277.18] }
+  ] },
+  'B': { variations: [
+    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:2, desc:'Barre B major (2nd fret)', freq:[123.47,185.00,246.94,311.13] },
+    { fingers:[[1,2],[3,3],[3,4],[3,5],[1,6]], open:[], muted:[1], startFret:4, desc:'Barre B major (4th fret)', freq:[123.47,185.00,246.94,311.13] },
+    { fingers:[[2,2],[1,3],[2,4],[2,6]], open:[5], muted:[1], desc:'B7 open voicing (x21202)', freq:[123.47,185.00,246.94,311.13] }
+  ] },
+  'Em': { variations: [
+    { fingers:[[2,2],[2,3]], open:[1,4,5,6], muted:[], desc:'Open E minor (022000)', freq:[82.41,123.47,164.81,196.00] },
+    { fingers:[[2,2],[2,3],[3,5]], open:[1,4,6], muted:[], desc:'Em7 open voicing (022030)', freq:[82.41,123.47,164.81,196.00] },
+    { fingers:[[2,2],[2,3],[4,4]], open:[1,5,6], muted:[], desc:'Emadd9 open voicing', freq:[82.41,123.47,164.81,196.00] }
+  ] },
+  'Dm': { variations: [
+    { fingers:[[2,4],[3,5],[1,6]], open:[3], muted:[1,2], desc:'Open D minor (xx0231)', freq:[146.83,196.00,220.00,293.66] },
+    { fingers:[[1,2],[3,3],[3,4],[2,5],[1,6]], open:[], muted:[1], startFret:5, desc:'Barre D minor (5th fret)', freq:[146.83,196.00,220.00,293.66] },
+    { fingers:[[2,4],[1,5],[1,6]], open:[3], muted:[1,2], desc:'Dm7 open voicing (xx0211)', freq:[146.83,196.00,220.00,293.66] }
+  ] }
+};
+
+const PP_FREQS = {
+  'Am': [110.00,164.81,220.00,261.63],
+  'G':  [98.00,146.83,196.00,246.94],
+  'F':  [87.31,130.81,174.61,220.00],
+  'C':  [130.81,196.00,261.63,329.63]
+};
+
+// ─── STATE ──────────────────────────────────────────────
+let selectedChord = 'C';
+let selectedVariation = 0;
+let capoFret = 6;
+let ppPlaying = false;
+let ppTimers = [];
+let activeUploadCard = null;
+let activeFeatureCell = null;
+const isMobile = () => window.innerWidth <= 900;
+
+// ─── BOTTOM SHEET ────────────────────────────────────────
+function openSheet(eyebrow, title, body, phoneHTML) {
+  document.getElementById('sheetEyebrow').textContent = eyebrow;
+  document.getElementById('sheetTitle').textContent = title;
+  document.getElementById('sheetBody').textContent = body;
+  const pw = document.getElementById('sheetPhoneWrap');
+  const inner = document.getElementById('sheetInner');
+  if (phoneHTML) {
+    pw.innerHTML = `<div class="sheet-screenshot">${phoneHTML}</div>`;
+    pw.style.display = 'flex';
+    inner.classList.remove('no-phone');
+  } else {
+    pw.innerHTML = '';
+    pw.style.display = 'none';
+    inner.classList.add('no-phone');
+  }
+  document.getElementById('sheetBackdrop').classList.add('open');
+  document.getElementById('bottomSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet() {
+  document.getElementById('sheetBackdrop').classList.remove('open');
+  document.getElementById('bottomSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('sheetBackdrop').addEventListener('click', closeSheet);
+
+// ─── UPLOAD CARDS ────────────────────────────────────────
+function handleUploadCard(el, key) {
+  const d = UPLOAD_DATA[key];
+  if (isMobile()) {
+    openSheet('How It Works', d.title, d.desc, d.screen);
+    return;
+  }
+  // Desktop: toggle panel
+  const panel = document.getElementById('uploadPreviewPanel');
+  const wasActive = el.classList.contains('active-card');
+  document.querySelectorAll('.upload-card').forEach(c => c.classList.remove('active-card'));
+  if (wasActive) { panel.classList.remove('visible'); return; }
+  el.classList.add('active-card');
+  document.getElementById('panelPhoneScreen').innerHTML = d.screen;
+  document.getElementById('panelTitle').textContent = d.title;
+  document.getElementById('panelDesc').textContent = d.desc;
+  panel.classList.add('visible');
+}
+
+// ─── FEATURE PREVIEW ─────────────────────────────────────
+// Map each feature to which row it belongs (1,2,3) and after which cell in that row
+const FEAT_ROW = { ai:1, strum:1, edit:2, capo:2, community:2, library:3, tuner:3, spotify:3 };
+
+function handleFeatureClick(el, key) {
+  const d = FEATURE_DATA[key];
+  if (isMobile()) {
+    openSheet('Feature', d.title, d.desc, d.screen);
+    return;
+  }
+  const row = FEAT_ROW[key];
+  const fpr = document.getElementById('fpr'+row);
+  const wasActive = el.classList.contains('fc-active') && fpr.classList.contains('fp-visible');
+  // Close all
+  document.querySelectorAll('.feature-cell').forEach(c => c.classList.remove('fc-active'));
+  document.querySelectorAll('.feature-preview-row').forEach(r => r.classList.remove('fp-visible'));
+  if (wasActive) return;
+  el.classList.add('fc-active');
+  document.getElementById('fpScreen'+row).innerHTML = d.screen;
+  document.getElementById('fpTitle'+row).textContent = d.title;
+  document.getElementById('fpDesc'+row).textContent = d.desc;
+  fpr.classList.add('fp-visible');
+  setTimeout(() => fpr.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+}
+function closeFeaturePreview(row) {
+  document.getElementById('fpr'+row).classList.remove('fp-visible');
+  document.querySelectorAll('.feature-cell').forEach(c => c.classList.remove('fc-active'));
+}
+
+// ─── CHORD PICKER ─────────────────────────────────────────
+function isValidVariation(d) {
+  // Open chord shapes (has open strings) are always playable regardless of capo position
+  if (d.open && d.open.length > 0) return true;
+  // Barre chords are only playable when their position is above the capo
+  return (d.startFret || 1) > capoFret;
+}
+
+function buildChordPicker() {
+  const grid = document.getElementById('chordPickerGrid');
+  grid.innerHTML = '';
+  Object.keys(CHORD_DATA).forEach(name => {
+    const variations = CHORD_DATA[name].variations;
+    const d = variations.find(v => isValidVariation(v)) || variations[0];
+    const el = document.createElement('div');
+    el.className = 'chord-pick' + (name === selectedChord ? ' selected' : '');
+    el.onclick = () => selectChord(name);
+    const mfd = buildMiniDark(d);
+    el.innerHTML = `<div class="chord-pick-name">${name}</div>${mfd}`;
+    grid.appendChild(el);
+  });
+}
+
+function buildMiniDark(d) {
+  const dots = (d.fingers||[]).map(([row,col]) => {
+    const rowPct = ((row-1)/4)*100; const colPct = ((col-1)/6)*100;
+    return `<div class="mfd-dot" style="top:${12+rowPct*0.7}px;left:${colPct}%"></div>`;
+  }).join('');
+  const mutes = (d.muted||[]).map(col => {
+    const colPct = ((col-1)/6)*100;
+    return `<div class="mfd-mute" style="left:${colPct}%"></div>`;
+  }).join('');
+  return `<div class="mini-fretboard-dark">${dots}${mutes}</div>`;
+}
+
+function selectChord(name) {
+  selectedChord = name;
+  const firstValid = CHORD_DATA[name].variations.findIndex(v => isValidVariation(v));
+  selectedVariation = firstValid !== -1 ? firstValid : 0;
+  buildChordPicker();
+  renderLargeFretboard();
+  document.getElementById('saveFeedback').textContent = '';
+  const mult = Math.pow(2, capoFret/12);
+  const freqs = CHORD_DATA[selectedChord].variations[selectedVariation]?.freq || [196,262,330,392];
+  playChordSound(freqs, mult);
+}
+
+function renderLargeFretboard() {
+  const d = CHORD_DATA[selectedChord].variations[selectedVariation];
+  const startFret = d.startFret || 1;
+  document.getElementById('lfbName').textContent = selectedChord;
+  document.getElementById('lfbDesc').textContent = d.desc;
+  const board = document.getElementById('lfbBoard');
+  board.innerHTML = '';
+  const W = board.offsetWidth || 280;
+  const H = 100;
+  const STRINGS = 6; const FRETS = 4;
+  const strW = W / (STRINGS - 1);
+  const fretH = (H - 18) / FRETS;
+  // Strings
+  for (let s=0;s<STRINGS;s++) {
+    const el = document.createElement('div');
+    el.className = 'lfb-string';
+    el.style.left = (s * strW) + 'px';
+    board.appendChild(el);
+  }
+  // Nut (only at fret 1) or top fret line + position label
+  if (startFret === 1) {
+    const nut = document.createElement('div'); nut.className = 'lfb-nut'; board.appendChild(nut);
+  } else {
+    const topLine = document.createElement('div');
+    topLine.className = 'lfb-fret'; topLine.style.top = '14px'; board.appendChild(topLine);
+    const lbl = document.createElement('div');
+    lbl.className = 'lfb-fret-label'; lbl.textContent = startFret + 'fr'; board.appendChild(lbl);
+  }
+  for (let f=1;f<=FRETS;f++) {
+    const el = document.createElement('div');
+    el.className = 'lfb-fret';
+    el.style.top = (18 + f * fretH) + 'px';
+    board.appendChild(el);
+  }
+  // Finger dots — label shows absolute fret number
+  (d.fingers||[]).forEach(([fret, str]) => {
+    const dot = document.createElement('div');
+    dot.className = 'lfb-dot';
+    dot.style.left = ((str-1) * strW) + 'px';
+    dot.style.top = (18 + (fret - 0.5) * fretH) + 'px';
+    dot.textContent = '';
+    board.appendChild(dot);
+  });
+  // Open strings
+  (d.open||[]).forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'lfb-open';
+    el.style.left = ((s-1) * strW) + 'px';
+    el.style.top = '2px';
+    board.appendChild(el);
+  });
+  // Muted strings
+  (d.muted||[]).forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'lfb-muted';
+    el.style.left = ((s-1) * strW) + 'px';
+    el.textContent = '×';
+    board.appendChild(el);
+  });
+}
+
+// ─── CAPO ─────────────────────────────────────────────────
+function ordinal(n) {
+  if (n >= 11 && n <= 13) return n + 'th';
+  const s = ['th','st','nd','rd'];
+  return n + (s[n % 10] || 'th');
+}
+function changeCapo(dir) {
+  capoFret = Math.max(0, Math.min(6, capoFret + dir));
+  const label = capoFret === 0 ? 'No capo' : `${ordinal(capoFret)} fret`;
+  document.getElementById('capoDisplay').textContent = label;
+  const rec = capoFret === 6;
+  const badge = document.getElementById('recoBadge');
+  badge.textContent = rec ? '★  Recommended — 6th fret' : (capoFret === 0 ? 'No capo selected' : `Capo ${ordinal(capoFret)} fret selected`);
+  badge.style.background = rec ? 'rgba(196,154,74,0.13)' : 'rgba(255,255,255,0.05)';
+  badge.style.color = rec ? 'var(--gold)' : 'rgba(234,228,216,0.4)';
+  document.getElementById('saveFeedback').textContent = '';
+  // Re-validate selected variation for new capo position
+  const variations = CHORD_DATA[selectedChord].variations;
+  if (!isValidVariation(variations[selectedVariation])) {
+    const firstValid = variations.findIndex(v => isValidVariation(v));
+    selectedVariation = firstValid !== -1 ? firstValid : 0;
+  }
+  buildChordPicker();
+  renderLargeFretboard();
+}
+
+// ─── AUDIO SYNTHESIS ──────────────────────────────────────
+function playChordSound(freqs, mult) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.value = f * mult * (1 + (Math.random()-0.5)*0.004);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i*0.045);
+      gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + i*0.045 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.045 + 1.6);
+      osc.start(ctx.currentTime + i*0.045);
+      osc.stop(ctx.currentTime + i*0.045 + 1.6);
+    });
+  } catch(e) {}
+}
+
+function selectVariation() { openVariationPicker(); }
+
+function openVariationPicker() {
+  const variations = CHORD_DATA[selectedChord].variations;
+  const container = document.getElementById('varCards');
+  container.innerHTML = '';
+  let varNum = 0;
+  variations.forEach((v, i) => {
+    if (!isValidVariation(v)) return;
+    varNum++;
+    const card = document.createElement('div');
+    card.className = 'var-card' + (i === selectedVariation ? ' var-card-selected' : '');
+    card.onclick = () => pickVariation(i);
+    card.innerHTML = `<div class="var-card-index">Variation ${varNum}</div>${buildMiniDark(v)}<div class="var-card-desc">${v.desc}</div>`;
+    container.appendChild(card);
+  });
+  document.getElementById('varPickerSubtitle').textContent =
+    selectedChord + ' — ' + varNum + ' variation' + (varNum !== 1 ? 's' : '');
+  document.getElementById('varBackdrop').classList.add('open');
+  document.getElementById('varPicker').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function pickVariation(index) {
+  selectedVariation = index;
+  closeVariationPicker();
+  renderLargeFretboard();
+  document.getElementById('saveFeedback').textContent = '';
+  const mult = Math.pow(2, capoFret/12);
+  const freqs = CHORD_DATA[selectedChord].variations[selectedVariation]?.freq || [196,262,330,392];
+  playChordSound(freqs, mult);
+}
+
+function closeVariationPicker() {
+  document.getElementById('varBackdrop').classList.remove('open');
+  document.getElementById('varPicker').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ─── CHORD PROGRESSION PLAYER ────────────────────────────
+function toggleProgression() {
+  const player = document.getElementById('progressionPlayer');
+  const isVisible = player.classList.contains('pp-visible');
+  if (isVisible) {
+    stopPlay();
+    player.classList.remove('pp-visible');
+  } else {
+    player.classList.add('pp-visible');
+    document.getElementById('strumAiRow').querySelector('.version-meta').textContent = 'Official · Capo 6th fret · Tap to close';
+    setTimeout(() => player.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+  }
+}
+
+function togglePlay() {
+  ppPlaying ? stopPlay() : startPlay();
+}
+
+function startPlay() {
+  ppPlaying = true;
+  document.getElementById('ppPlayIcon').textContent = '■';
+  document.getElementById('ppPlayLabel').textContent = 'Stop';
+  document.getElementById('ppPlayBtn').disabled = false;
+  const chords = Array.from(document.querySelectorAll('.pp-chord'));
+  const BPM = 120;
+  const beatMs = (60/BPM)*1000 * 2; // 2 beats per chord
+  let i = 0;
+  function step() {
+    if (!ppPlaying) return;
+    chords.forEach(c => c.classList.remove('pp-playing'));
+    if (i < chords.length) {
+      chords[i].classList.add('pp-playing');
+      const key = chords[i].dataset.chord;
+      const freqs = PP_FREQS[key] || [220,330,440];
+      playChordSound(freqs, Math.pow(2, 6/12));
+      i++;
+      ppTimers.push(setTimeout(step, beatMs));
+    } else {
+      i = 0;
+      ppTimers.push(setTimeout(step, beatMs));
+    }
+  }
+  step();
+}
+
+function stopPlay() {
+  ppPlaying = false;
+  ppTimers.forEach(clearTimeout); ppTimers = [];
+  document.querySelectorAll('.pp-chord').forEach(c => c.classList.remove('pp-playing'));
+  const btn = document.getElementById('ppPlayBtn');
+  if (btn) { document.getElementById('ppPlayIcon').textContent = '▶'; document.getElementById('ppPlayLabel').textContent = 'Play progression'; btn.disabled = false; }
+}
+
+// Community version bottom sheet (non-AI rows on mobile)
+function openVersionSheet(name, meta, desc) {
+  if (isMobile()) {
+    openSheet('Community Version', name, `${meta}\n\n${desc}`, null);
+  }
+}
+
+// ─── CURSOR ───────────────────────────────────────────────
+const hasMouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+if (hasMouse) {
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  cursor.style.display = 'block'; ring.style.display = 'block';
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; }, {passive:true});
+  (function loop(){
+    cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+    rx+=(mx-rx)*0.25; ry+=(my-ry)*0.25;
+    ring.style.left=rx+'px'; ring.style.top=ry+'px';
+    requestAnimationFrame(loop);
+  })();
+  document.querySelectorAll('a,.upload-card,.how-step,.feature-cell,.version-row,.chord-pick,.capo-btn,.modal-btn,.pp-play-btn,.var-picker-close').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{cursor.classList.add('hover');ring.classList.add('hover');});
+    el.addEventListener('mouseleave',()=>{cursor.classList.remove('hover');ring.classList.remove('hover');});
+  });
+}
+
+// ─── PARTNER FORM ─────────────────────────────────────────
+document.querySelectorAll('.pf-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.pf-pill').forEach(p => p.classList.remove('pf-active'));
+    pill.classList.add('pf-active');
+    document.getElementById('pfType').value = pill.dataset.val;
+  });
+});
+
+document.getElementById('partnerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const name = form.name.value.trim();
+  const email = form.email.value.trim();
+  const errEl = document.getElementById('pfError');
+  errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Please enter your name.'; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Please enter a valid email address.'; return; }
+  const btn = document.getElementById('pfSubmit');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try {
+    // ↓ Replace YOUR_FORM_ID with your Formspree form ID (formspree.io → New Form → copy the ID)
+    const res = await fetch('https://formspree.io/f/xaqlnrkj', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form)
+    });
+    if (res.ok) {
+      document.getElementById('pfForm').style.display = 'none';
+      document.getElementById('pfThanks').classList.add('pf-thanks-visible');
+    } else {
+      throw new Error();
+    }
+  } catch {
+    errEl.textContent = 'Something went wrong — please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Submit Application';
+  }
+});
+
+// ─── NAV ──────────────────────────────────────────────────
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 60), {passive:true});
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobileMenu');
+hamburger.addEventListener('click', () => { mobileMenu.classList.add('open'); hamburger.classList.add('active'); });
+document.getElementById('menuClose').addEventListener('click', () => { mobileMenu.classList.remove('open'); hamburger.classList.remove('active'); });
+function closeMobileMenu() { mobileMenu.classList.remove('open'); hamburger.classList.remove('active'); }
+
+// ─── SCROLL REVEAL ────────────────────────────────────────
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);} });
+}, {threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ─── SMOOTH SCROLL ────────────────────────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const href=a.getAttribute('href'); if(href==='#') return;
+    const t=document.querySelector(href); if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});}
+  });
+});
+
+// ─── INIT ─────────────────────────────────────────────────
+buildChordPicker();
+renderLargeFretboard();
+</script>
+
+<!-- VARIATION PICKER OVERLAY -->
+<div class="var-backdrop" id="varBackdrop" onclick="closeVariationPicker()"></div>
+<div class="var-picker" id="varPicker">
+  <div class="var-picker-header">
+    <div class="var-picker-title">Choose a Variation</div>
+    <button class="var-picker-close" onclick="closeVariationPicker()">✕</button>
+  </div>
+  <div class="var-picker-subtitle" id="varPickerSubtitle"></div>
+  <div class="var-cards" id="varCards"></div>
+</div>
+</body>
+</html>
